@@ -1,0 +1,63 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "backend: watch",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["watch", "--project", "server", "--no-hot-reload"],
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated", "group": "dev" }
+    },
+    {
+      "label": "frontend: dev",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev"],
+      "options": { "cwd": "${workspaceFolder}/web" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated", "group": "dev" }
+    },
+    {
+      "label": "dev: start both",
+      "dependsOn": ["backend: watch", "frontend: dev"],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "label": "api: regenerate client",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "api:generate"],
+      "options": { "cwd": "${workspaceFolder}/web" },
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: build",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "${workspaceFolder}/server/Afterpelago.csproj"],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "publish: win-x64",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "publish",
+        "server/Afterpelago.csproj",
+        "-c",
+        "Release",
+        "-r",
+        "win-x64",
+        "--self-contained",
+        "true",
+        "-o",
+        "artifacts/publish/win-x64"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

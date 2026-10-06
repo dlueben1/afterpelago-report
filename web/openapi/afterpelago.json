@@ -1,0 +1,267 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Afterpelago | v1",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/auth/session": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "GetSession",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/antiforgery": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "GetAntiforgeryToken",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AntiforgeryTokenResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "Logout",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/demo/server-data": {
+      "get": {
+        "tags": [
+          "Demo"
+        ],
+        "operationId": "GetServerData",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerDataResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/demo/counter": {
+      "get": {
+        "tags": [
+          "Demo"
+        ],
+        "operationId": "GetCounter",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CounterResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/demo/counter/increment": {
+      "post": {
+        "tags": [
+          "Demo"
+        ],
+        "operationId": "IncrementCounter",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CounterResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AntiforgeryTokenResponse": {
+        "required": [
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "CounterResponse": {
+        "required": [
+          "value",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SamplePoint": {
+        "required": [
+          "label",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "ServerDataResponse": {
+        "required": [
+          "greeting",
+          "serverTime",
+          "randomValue",
+          "samples"
+        ],
+        "type": "object",
+        "properties": {
+          "greeting": {
+            "type": "string"
+          },
+          "serverTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "randomValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "samples": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SamplePoint"
+            }
+          }
+        }
+      },
+      "SessionResponse": {
+        "required": [
+          "isAuthenticated",
+          "user",
+          "discordConfigured",
+          "devLoginAvailable"
+        ],
+        "type": "object",
+        "properties": {
+          "isAuthenticated": {
+            "type": "boolean"
+          },
+          "user": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SessionUser"
+              }
+            ]
+          },
+          "discordConfigured": {
+            "type": "boolean"
+          },
+          "devLoginAvailable": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SessionUser": {
+        "required": [
+          "discordUserId",
+          "displayName",
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "discordUserId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Demo"
+    }
+  ]
+}

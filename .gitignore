@@ -1,0 +1,21 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+
+# Frontend
+node_modules/
+web/dist/
+
+# Local state and build output
+.data/
+.local/
+artifacts/
+
+# api:check scratch
+web/.api-check/
+web/src/api/.generated-check/
+
+# Copilot
+.github/copilot-instructions.md

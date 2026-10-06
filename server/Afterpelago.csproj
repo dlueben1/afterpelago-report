@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Afterpelago</RootNamespace>
+    <UserSecretsId>afterpelago-dev</UserSecretsId>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <!-- The explicit contract build uses its own bin/obj folders, so the default globs must ignore every output folder. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);bin/**;obj/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <!-- OpenAPI contract: only generated when the web/ tooling asks for it (npm run api:generate), never on plain build/watch. -->
+  <PropertyGroup>
+    <OpenApiGenerateDocuments>true</OpenApiGenerateDocuments>
+    <OpenApiGenerateDocumentsOnBuild>false</OpenApiGenerateDocumentsOnBuild>
+    <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/../web/openapi</OpenApiDocumentsDirectory>
+    <OpenApiGenerateDocumentsOptions>--file-name afterpelago</OpenApiGenerateDocumentsOptions>
+  </PropertyGroup>
+
+  <!-- Frontend lives in ../web. Production assets are staged in web/dist and added to the publish output only. -->
+  <PropertyGroup>
+    <WebProjectDir>$(MSBuildProjectDirectory)/../web/</WebProjectDir>
+    <WebDistDir>$(WebProjectDir)dist/</WebDistDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNet.Security.OAuth.Discord" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.12">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!--
+    Publish only: restore npm packages, regenerate the API contract/client, typecheck and build the Vite app,
+    then add the result to the publish output under wwwroot. Plain build and dotnet watch never run this.
+  -->
+  <Target Name="BuildWebForPublish" BeforeTargets="ComputeFilesToPublish" Condition="'$(SkipWebBuild)' != 'true'">
+    <Exec Command="npm ci" WorkingDirectory="$(WebProjectDir)" />
+    <Exec Command="npm run api:generate -- --no-restore" WorkingDirectory="$(WebProjectDir)" />
+    <Exec Command="npm run build" WorkingDirectory="$(WebProjectDir)" />
+  </Target>
+
+  <Target Name="IncludeWebInPublish" AfterTargets="ComputeFilesToPublish" DependsOnTargets="BuildWebForPublish">
+    <ItemGroup>
+      <_WebDistFile Include="$(WebDistDir)**/*" />
+      <ResolvedFileToPublish Include="@(_WebDistFile)">
+        <RelativePath>wwwroot/%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+    <Error Condition="'@(_WebDistFile)' == ''" Text="No frontend build output found in $(WebDistDir)." />
+  </Target>
+
+</Project>

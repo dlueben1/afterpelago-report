@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+web/src/api/generated/** linguist-generated=true
+web/openapi/** linguist-generated=true
+server/Data/Migrations/** linguist-generated=true

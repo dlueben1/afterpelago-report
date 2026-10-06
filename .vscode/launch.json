@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend (debug, dev sign-in)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "backend: build",
+      "program": "${workspaceFolder}/server/bin/Debug/net10.0/Afterpelago.dll",
+      "cwd": "${workspaceFolder}/server",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5041",
+        "Authentication__DevLogin__Enabled": "true"
+      },
+      "stopAtEntry": false
+    }
+  ]
+}
