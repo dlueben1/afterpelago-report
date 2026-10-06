@@ -18,6 +18,7 @@ public sealed class AfterpelagoDbContext(DbContextOptions<AfterpelagoDbContext> 
             entity.HasKey(a => a.DiscordUserId);
             entity.Property(a => a.DiscordUserId).HasMaxLength(32);
             entity.Property(a => a.DisplayName).HasMaxLength(100);
+            entity.Property(a => a.AvatarHash).HasMaxLength(128);
             entity.Property(a => a.Role).HasMaxLength(32);
             // Stored as text ('Pending'/'Approved'/'Denied') so admins can edit it with plain SQL.
             entity.Property(a => a.Status).HasConversion<string>().HasMaxLength(16);

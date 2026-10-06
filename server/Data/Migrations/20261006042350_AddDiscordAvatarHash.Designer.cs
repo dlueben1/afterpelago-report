@@ -2,6 +2,7 @@
 using Afterpelago.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,9 +10,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Afterpelago.Data.Migrations
 {
     [DbContext(typeof(AfterpelagoDbContext))]
-    partial class AfterpelagoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261006042350_AddDiscordAvatarHash")]
+    partial class AddDiscordAvatarHash
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");

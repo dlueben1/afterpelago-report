@@ -19,6 +19,7 @@ public static class AuthClaims
     public const string DiscordId = "afterpelago:discord_id";
     public const string DiscordUsername = "afterpelago:discord_username";
     public const string DiscordGlobalName = "afterpelago:discord_global_name";
+    public const string DiscordAvatarHash = "afterpelago:discord_avatar_hash";
 
     public static ClaimsPrincipal CreateSessionPrincipal(AccessRecord record)
     {
@@ -31,6 +32,11 @@ public static class AuthClaims
             AuthSchemes.Application,
             ClaimTypes.Name,
             ClaimTypes.Role);
+
+        if (!string.IsNullOrEmpty(record.AvatarHash))
+        {
+            identity.AddClaim(new Claim(DiscordAvatarHash, record.AvatarHash));
+        }
 
         return new ClaimsPrincipal(identity);
     }

@@ -26,7 +26,8 @@ public static class AuthEndpoints
                 ? new SessionUser(
                     user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "",
                     user.FindFirstValue(ClaimTypes.Name) ?? "",
-                    user.FindFirstValue(ClaimTypes.Role) ?? "")
+                    user.FindFirstValue(ClaimTypes.Role) ?? "",
+                    user.FindFirstValue(AuthClaims.DiscordAvatarHash))
                 : null;
 
             return TypedResults.Ok(new SessionResponse(signedIn, sessionUser, capabilities.Discord, capabilities.DevLogin));
@@ -72,7 +73,8 @@ public static class AuthEndpoints
 
             var username = external.Principal!.FindFirstValue(AuthClaims.DiscordUsername);
             var globalName = external.Principal.FindFirstValue(AuthClaims.DiscordGlobalName);
-            var record = await UpsertAccessRecordAsync(db, discordId, string.IsNullOrWhiteSpace(globalName) ? username : globalName, username, time.GetUtcNow(), context.RequestAborted);
+            var avatarHash = external.Principal.FindFirstValue(AuthClaims.DiscordAvatarHash);
+            var record = await UpsertAccessRecordAsync(db, discordId, string.IsNullOrWhiteSpace(globalName) ? username : globalName, username, avatarHash, time.GetUtcNow(), context.RequestAborted);
 
             switch (record.Status)
             {
@@ -98,7 +100,7 @@ public static class AuthEndpoints
                 return TypedResults.NotFound();
             }
 
-            var record = await UpsertAccessRecordAsync(db, DevUserId, "Dev User", "dev-user", time.GetUtcNow(), context.RequestAborted);
+            var record = await UpsertAccessRecordAsync(db, DevUserId, "Dev User", "dev-user", null, time.GetUtcNow(), context.RequestAborted);
             if (record.Status != AccessStatus.Approved)
             {
                 record.Status = AccessStatus.Approved;
@@ -112,7 +114,7 @@ public static class AuthEndpoints
 
     /// <summary>Records the sign-in. New accounts start Pending; existing accounts keep whatever status an admin set.</summary>
     internal static async Task<AccessRecord> UpsertAccessRecordAsync(
-        AfterpelagoDbContext db, string discordUserId, string? displayName, string? username, DateTimeOffset now, CancellationToken ct)
+        AfterpelagoDbContext db, string discordUserId, string? displayName, string? username, string? avatarHash, DateTimeOffset now, CancellationToken ct)
     {
         for (var attempt = 0; ; attempt++)
         {
@@ -125,6 +127,7 @@ public static class AuthEndpoints
 
             record.DisplayName = string.IsNullOrWhiteSpace(displayName) ? discordUserId : displayName;
             record.Username = username;
+            record.AvatarHash = avatarHash;
             record.LastSeenAt = now;
 
             try

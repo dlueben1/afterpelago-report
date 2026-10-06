@@ -1,6 +1,6 @@
 namespace Afterpelago.Api;
 
-public sealed record SessionUser(string DiscordUserId, string DisplayName, string Role);
+public sealed record SessionUser(string DiscordUserId, string DisplayName, string Role, string? AvatarHash);
 
 public sealed record SessionResponse(
     bool IsAuthenticated,

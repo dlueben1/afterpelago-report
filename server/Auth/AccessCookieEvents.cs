@@ -43,7 +43,9 @@ public sealed class AccessCookieEvents : CookieAuthenticationEvents
         }
 
         var current = context.Principal!;
-        if (current.FindFirstValue(ClaimTypes.Name) != record.DisplayName || current.FindFirstValue(ClaimTypes.Role) != record.Role)
+        if (current.FindFirstValue(ClaimTypes.Name) != record.DisplayName
+            || current.FindFirstValue(ClaimTypes.Role) != record.Role
+            || current.FindFirstValue(AuthClaims.DiscordAvatarHash) != record.AvatarHash)
         {
             context.ReplacePrincipal(AuthClaims.CreateSessionPrincipal(record));
             context.ShouldRenew = true;

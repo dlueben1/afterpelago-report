@@ -239,7 +239,8 @@
         "required": [
           "discordUserId",
           "displayName",
-          "role"
+          "role",
+          "avatarHash"
         ],
         "type": "object",
         "properties": {
@@ -251,6 +252,12 @@
           },
           "role": {
             "type": "string"
+          },
+          "avatarHash": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       }

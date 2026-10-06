@@ -80,6 +80,7 @@ public static class AuthSetup
                     AddClaim(context, context.User, "id", AuthClaims.DiscordId);
                     AddClaim(context, context.User, "username", AuthClaims.DiscordUsername);
                     AddClaim(context, context.User, "global_name", AuthClaims.DiscordGlobalName);
+                    AddClaim(context, context.User, "avatar", AuthClaims.DiscordAvatarHash);
                     return Task.CompletedTask;
                 };
 

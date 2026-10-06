@@ -24,6 +24,8 @@ public sealed class AccessRecord
 
     public string? Username { get; set; }
 
+    public string? AvatarHash { get; set; }
+
     public AccessStatus Status { get; set; } = AccessStatus.Pending;
 
     public string Role { get; set; } = "Member";

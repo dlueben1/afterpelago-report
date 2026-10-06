@@ -9,4 +9,6 @@ export interface SessionUser {
   discordUserId: string;
   displayName: string;
   role: string;
+  /** @nullable */
+  avatarHash: string | null;
 }
