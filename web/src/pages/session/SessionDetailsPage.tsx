@@ -186,7 +186,7 @@ export default function SessionDetailsPage() {
               </Show>
               <div class="grid min-w-0 gap-4 lg:grid-cols-12">
                 <Card
-                  title="Session Overview"
+                  title={details().name}
                   icon="icon-[tabler--device-gamepad-filled]"
                   color="ap-blue"
                   class="lg:col-span-5"
@@ -194,9 +194,6 @@ export default function SessionDetailsPage() {
                 >
                   <div class="flex flex-col gap-4">
                     <div class="flex flex-wrap items-center gap-3">
-                      <h1 class="min-w-0 break-words font-display text-xl font-extrabold">
-                        {details().name}
-                      </h1>
                       <span
                         class={`badge badge-soft shrink-0 ${statusClass(details().status)}`}
                       >
@@ -230,27 +227,9 @@ export default function SessionDetailsPage() {
                         </dd>
                       </div>
                     </dl>
-                    <div class="flex items-start gap-3 rounded-box border border-ap-green/20 bg-base-100/90 p-3">
-                      <span
-                        class="icon-[tabler--clock] mt-1 size-6 shrink-0 text-ap-green"
-                        aria-hidden="true"
-                      />
-                      <div class="min-w-0">
-                        <p
-                          class="font-bold text-base-content"
-                          aria-live="polite"
-                        >
-                          {formatPlaytime(details().totalPlaytimeSeconds)}
-                        </p>
-                        <p class="text-sm text-ap-muted">Total Playtime</p>
-                        <p class="mt-1 text-xs text-ap-muted">
-                          Time with at least one player connected to a game.
-                        </p>
-                      </div>
-                    </div>
                   </div>
                 </Card>
-                <div class="grid min-w-0 gap-4 sm:grid-cols-2 lg:col-span-7 lg:self-start">
+                <div class="grid min-w-0 gap-4 sm:grid-cols-2 lg:col-span-7 lg:grid-cols-3 lg:self-start">
                   <HeroStatCard
                     label="Total Checks"
                     value={Number(details().checkCount).toLocaleString()}
@@ -263,6 +242,14 @@ export default function SessionDetailsPage() {
                     value={Number(details().hintCount).toLocaleString()}
                     color="ap-gold"
                     icon="icon-[tabler--bulb]"
+                    class="min-h-32"
+                  />
+                  <HeroStatCard
+                    label="Total Playtime"
+                    value={formatPlaytime(details().totalPlaytimeSeconds)}
+                    color="ap-green"
+                    icon="icon-[tabler--clock]"
+                    description="Time with at least one player connected to a game."
                     class="min-h-32"
                   />
                 </div>

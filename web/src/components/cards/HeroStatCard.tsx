@@ -3,8 +3,9 @@ import { Show } from "solid-js";
 type HeroStatCardProps = {
   label: string;
   value: string | number;
-  color: "ap-blue" | "ap-violet" | "ap-gold";
+  color: "ap-blue" | "ap-violet" | "ap-gold" | "ap-green";
   icon?: string;
+  description?: string;
   class?: string;
 };
 
@@ -23,6 +24,9 @@ export default function HeroStatCard(props: HeroStatCardProps) {
           <p class="font-display text-2xl font-extrabold break-words" aria-live="polite">{props.value}</p>
         </div>
         <p class="text-ap-muted font-semibold">{props.label}</p>
+        <Show when={props.description}>
+          <p class="text-xs text-ap-muted">{props.description}</p>
+        </Show>
       </div>
     </div>
   );

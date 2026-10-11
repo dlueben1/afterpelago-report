@@ -1,6 +1,16 @@
 import { A, useParams, useSearchParams } from "@solidjs/router";
 import { useQuery } from "@tanstack/solid-query";
-import { For, Match, Show, Switch, createMemo, lazy } from "solid-js";
+import type { ECharts } from "echarts/core";
+import {
+  For,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+  createSignal,
+  lazy,
+} from "solid-js";
 import {
   getGetSessionChecksQueryKey,
   getGetSessionChecksQueryOptions,
@@ -41,6 +51,48 @@ export default function TimelinePage() {
   const params = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const account = useGetSession();
+  const [dragMode, setDragMode] = createSignal<"zoom" | "pan">("zoom");
+  const [chart, setChart] = createSignal<ECharts>();
+
+  function applyDragMode(instance: ECharts, mode: "zoom" | "pan") {
+    instance.setOption({
+      dataZoom: [{ id: "timeline-inside", moveOnMouseMove: mode === "pan" }],
+    });
+    instance.dispatchAction({
+      type: "takeGlobalCursor",
+      key: "dataZoomSelect",
+      dataZoomSelectActive: mode === "zoom",
+    });
+    instance.getZr().setCursorStyle(mode === "zoom" ? "crosshair" : "grab");
+  }
+
+  createEffect(() => {
+    const instance = chart();
+    const mode = dragMode();
+    if (instance && !instance.isDisposed()) applyDragMode(instance, mode);
+  });
+
+  function handleChartUpdate(instance: ECharts) {
+    setChart(instance);
+    applyDragMode(instance, dragMode());
+  }
+
+  function handleGlobalCursor(params: unknown) {
+    const payload = params as { key?: string; dataZoomSelectActive?: boolean };
+    setDragMode(
+      payload.key === "dataZoomSelect" && payload.dataZoomSelectActive
+        ? "zoom"
+        : "pan",
+    );
+  }
+
+  function resetZoom() {
+    const instance = chart();
+    if (!instance || instance.isDisposed()) return;
+    instance.dispatchAction({ type: "restore" });
+    applyDragMode(instance, dragMode());
+  }
+
   const sessionId = createMemo(() => {
     const value = Number(params.id);
     return /^\d+$/.test(params.id) &&
@@ -181,10 +233,51 @@ export default function TimelinePage() {
                   </For>
                 </select>
               </label>
-              <p class="text-sm text-ap-muted sm:ml-auto">
-                Drag across the chart to zoom into a time range. Use the toolbox
-                restore button to reset.
-              </p>
+              <div class="flex items-center gap-2 sm:ml-auto">
+                <div class="join" role="group" aria-label="Chart drag mode">
+                  <div class="tooltip" data-tip="Select a time range to zoom">
+                    <button
+                      type="button"
+                      class={`btn btn-square btn-sm join-item ${dragMode() === "zoom" ? "btn-primary" : "btn-outline"}`}
+                      aria-label="Select range to zoom"
+                      aria-pressed={dragMode() === "zoom"}
+                      onClick={() => setDragMode("zoom")}
+                    >
+                      <span
+                        class="icon-[tabler--zoom-in] size-5"
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </div>
+                  <div class="tooltip" data-tip="Pan across time">
+                    <button
+                      type="button"
+                      class={`btn btn-square btn-sm join-item ${dragMode() === "pan" ? "btn-primary" : "btn-outline"}`}
+                      aria-label="Pan across time"
+                      aria-pressed={dragMode() === "pan"}
+                      onClick={() => setDragMode("pan")}
+                    >
+                      <span
+                        class="icon-[tabler--hand-move] size-5"
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </div>
+                </div>
+                <div class="tooltip" data-tip="Reset zoom">
+                  <button
+                    type="button"
+                    class="btn btn-outline btn-square btn-sm"
+                    aria-label="Reset zoom"
+                    onClick={resetZoom}
+                  >
+                    <span
+                      class="icon-[tabler--zoom-reset] size-5"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+              </div>
             </div>
           </Card>
           <Card
@@ -206,6 +299,8 @@ export default function TimelinePage() {
                 class="h-[32rem] w-full"
                 label={`Cumulative checks over time for ${session.data!.name}`}
                 option={option()}
+                onUpdate={handleChartUpdate}
+                onEvents={{ globalcursortaken: handleGlobalCursor }}
               />
             </Show>
           </Card>

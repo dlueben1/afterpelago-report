@@ -76,6 +76,11 @@
   --color-ap-canvas: #f7faff;
 }
 
+.ap-chart-tooltip {
+  will-change: auto !important;
+  transition: none !important;
+}
+
 .game-box-gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 8rem), 10rem));

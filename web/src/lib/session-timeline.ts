@@ -48,12 +48,12 @@ function formatCheckTooltip(params: unknown, checks: CheckResponse[]): string {
   const check = dataIndex === undefined ? undefined : checks[dataIndex];
   if (!check) return "";
   const image = check.imageUrl
-    ? `<img src="${escapeHtml(check.imageUrl)}" alt="" width="32" height="32" style="image-rendering:pixelated;vertical-align:middle;margin-right:6px" />`
+    ? `<img src="${escapeHtml(check.imageUrl)}" alt="" width="64" height="64" style="flex:none;width:64px;height:64px;object-fit:contain;image-rendering:pixelated" />`
     : "";
   const summary = `<b>${escapeHtml(check.senderName)}</b> found <b>${escapeHtml(check.itemName)}</b> for <b>${escapeHtml(check.receiverName)}</b>`;
   const location = `(Found at ${escapeHtml(check.locationName)})`;
   const when = `${new Date(check.timestampUtc).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`;
-  return `<div style="max-width:280px">${image}<span>${summary}</span><br/><span style="opacity:.75">${location}</span><br/><span style="opacity:.75">${when}</span></div>`;
+  return `<div style="display:flex;align-items:flex-start;gap:12px;width:360px;max-width:calc(100vw - 96px);white-space:normal">${image}<div style="flex:1;min-width:0;overflow-wrap:anywhere"><div>${summary}</div><div style="margin-top:4px">${location}</div><div style="margin-top:4px">${when}</div></div></div>`;
 }
 
 /**
@@ -82,8 +82,19 @@ export function buildTimelineOption(
         restore: {},
       },
     },
-    dataZoom: [{ type: "inside", xAxisIndex: 0, filterMode: "none" }],
+    dataZoom: [
+      {
+        id: "timeline-inside",
+        type: "inside",
+        xAxisIndex: 0,
+        filterMode: "none",
+      },
+    ],
     tooltip: {
+      renderMode: "html",
+      className: "ap-chart-tooltip",
+      transitionDuration: 0,
+      textStyle: { color: "#10374a" },
       trigger: "item",
       confine: true,
       formatter: (params: unknown) => formatCheckTooltip(params, checks),
@@ -128,6 +139,10 @@ export function buildDailyOption(
     },
     yAxis: { type: "value", min: 0, minInterval: 1 },
     tooltip: {
+      renderMode: "html",
+      className: "ap-chart-tooltip",
+      transitionDuration: 0,
+      textStyle: { color: "#10374a" },
       trigger: "item",
       confine: true,
       formatter: (params: unknown) => {
