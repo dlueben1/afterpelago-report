@@ -9,7 +9,7 @@ type SidebarItem = {
 };
 
 const items: SidebarItem[] = [
-  { label: "Dashboard", href: "/demo", icon: "icon-[tabler--home-2]" },
+  // Dashboard nav entry is hidden until the real dashboard ships (Milestone 9).
   {
     label: "Sessions",
     href: "/sessions",
@@ -20,7 +20,11 @@ const items: SidebarItem[] = [
 ];
 
 const adminItems: SidebarItem[] = [
-  { label: "Game Scraper", href: "/game-scraper", icon: "icon-[tabler--photo-search]" },
+  {
+    label: "Game Scraper",
+    href: "/game-scraper",
+    icon: "icon-[tabler--photo-search]",
+  },
   {
     label: "User Management",
     href: "/users",
@@ -47,8 +51,10 @@ export default function SidebarContent(props: { role?: string | null }) {
       <ul class="menu w-full gap-1 px-2 py-3 text-sm">
         <For each={items}>
           {(item) => {
-            const active = () => location.pathname === item.href
-              || (item.href === "/sessions" && location.pathname.startsWith("/sessions/"));
+            const active = () =>
+              location.pathname === item.href ||
+              (item.href === "/sessions" &&
+                location.pathname.startsWith("/sessions/"));
 
             return (
               <li>

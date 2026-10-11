@@ -33,6 +33,14 @@ public static class SessionEndpoints
             .Produces(StatusCodes.Status204NoContent).ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         api.MapGet("", GetSessions).WithName("GetSessions");
+        api.MapGet("/needs-review", GetNeedsReview).WithName("GetSessionsNeedingReview")
+            .Produces<IReadOnlyList<NeedsReviewResponse>>();
+        api.MapPut("/{id:int}/claims", ClaimSlots).WithName("ClaimSessionSlots")
+            .Produces(StatusCodes.Status204NoContent).ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
+        api.MapPut("/{id:int}/slots/{slotId:int}/ownership", SetSlotOwnership).WithName("SetSlotOwnership")
+            .RequireAuthorization(AuthSetup.AdminOnlyPolicy)
+            .Produces<SlotOwnerResponse>().ProducesProblem(StatusCodes.Status400BadRequest).ProducesProblem(StatusCodes.Status404NotFound);
         api.MapPost("/{id:int}/favorite", SetFavorite).WithName("SetSessionFavorite")
             .Produces<SessionFavoriteResponse>().ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound);
@@ -88,6 +96,33 @@ public static class SessionEndpoints
     private static Task<IReadOnlyList<SessionSummaryResponse>> GetSessions(AfterpelagoDbContext db, ClaimsPrincipal user, CancellationToken ct) =>
         SessionOverview.ListAsync(db, user.FindFirstValue(ClaimTypes.NameIdentifier)!, null, ct);
 
+    /// <summary>Lists published sessions the caller still needs to review.</summary>
+    private static async Task<IResult> GetNeedsReview(SlotOwnershipService ownership, ClaimsPrincipal user, CancellationToken ct) =>
+        TypedResults.Ok(await ownership.GetNeedsReviewAsync(user.FindFirstValue(ClaimTypes.NameIdentifier)!, ct));
+
+    /// <summary>Saves the caller's slot claims for a session and marks it reviewed.</summary>
+    private static async Task<IResult> ClaimSlots(int id, ClaimSlotsRequest request, SlotOwnershipService ownership, ClaimsPrincipal user, CancellationToken ct)
+    {
+        try
+        {
+            return await ownership.ClaimAsync(id, user.FindFirstValue(ClaimTypes.NameIdentifier)!, request, ct)
+                ? TypedResults.NoContent() : TypedResults.Problem(title: "Session not found.", statusCode: 404);
+        }
+        catch (SessionInputException ex) { return TypedResults.Problem(title: "Invalid slot claim.", detail: ex.Message, statusCode: 400); }
+        catch (SessionConflictException ex) { return TypedResults.Problem(title: "Slot claim conflict.", detail: ex.Message, statusCode: 409); }
+    }
+
+    /// <summary>Lets an admin set a slot's owner, including on draft imports.</summary>
+    private static async Task<IResult> SetSlotOwnership(int id, int slotId, SetSlotOwnershipRequest request, SlotOwnershipService ownership, CancellationToken ct)
+    {
+        try
+        {
+            var result = await ownership.SetOwnershipAsync(id, slotId, request, ct);
+            return result is null ? TypedResults.Problem(title: "Slot not found.", statusCode: 404) : TypedResults.Ok(result);
+        }
+        catch (SessionInputException ex) { return TypedResults.Problem(title: "Invalid slot owner.", detail: ex.Message, statusCode: 400); }
+    }
+
     /// <summary>Sets the caller's bookmark atomically; repeated requests do not toggle it.</summary>
     private static async Task<IResult> SetFavorite(int id, SetSessionFavoriteRequest request, AfterpelagoDbContext db, ClaimsPrincipal user, CancellationToken ct)
     {
@@ -113,6 +148,7 @@ public static class SessionEndpoints
         var session = await db.Sessions.AsNoTracking().AsSplitQuery()
             .Include(s => s.Slots).ThenInclude(s => s.Connections).ThenInclude(c => c.LogEvent)
             .Include(s => s.Slots).ThenInclude(s => s.Game)
+            .Include(s => s.Slots).ThenInclude(s => s.OwnerUser)
             .Include(s => s.Imports)
             .SingleOrDefaultAsync(s => s.Id == id && s.State == SessionState.Published, ct);
         if (session is null) return TypedResults.NotFound();
@@ -126,7 +162,8 @@ public static class SessionEndpoints
                     .Select(c => new ConnectionResponse(c.Id, c.LogEvent.TimestampUtc!.Value, c.Action.ToString(), c.Kind.ToString(), c.ClientVersion,
                         c.TagsJson is null ? [] : JsonSerializer.Deserialize<string[]>(c.TagsJson) ?? [])).ToList(),
                 x.Game?.CoverHash is null ? null : $"/api/games/{x.Game.Id}/cover.webp",
-                goalBySlot.TryGetValue(x.Id, out var goalUtc) ? goalUtc : null)).ToList();
+                goalBySlot.TryGetValue(x.Id, out var goalUtc) ? goalUtc : null,
+                x.Ownership.ToString(), x.OwnerDiscordUserId, x.OwnerUser?.DisplayName, x.OwnerUser?.AvatarHash, x.OwnershipSource?.ToString())).ToList();
         var imports = session.Imports.OrderBy(i => i.ImportedAt)
             .Select(i => new SessionImportInfoResponse(i.Id, i.ImportedAt, i.Method.ToString(), i.OriginalFileName, i.ByteLength, i.Sha256, i.WarningCount)).ToList();
         var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;

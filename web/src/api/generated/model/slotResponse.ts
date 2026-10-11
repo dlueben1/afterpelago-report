@@ -14,4 +14,13 @@ export interface SlotResponse {
   /** @nullable */
   gameName: string | null;
   goalCompleted: boolean;
+  ownership: string;
+  /** @nullable */
+  ownerDiscordUserId: string | null;
+  /** @nullable */
+  ownerDisplayName: string | null;
+  /** @nullable */
+  ownerAvatarHash: string | null;
+  /** @nullable */
+  ownershipSource: string | null;
 }

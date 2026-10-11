@@ -41,8 +41,13 @@ import {
   sourceDay,
   sourceDayWindow,
 } from "../../lib/session-timeline";
-import { buildSlotColors } from "../../lib/slot-colors";
 import {
+  buildGrouping,
+  hasGroupableSlots,
+  type GroupMode,
+} from "../../lib/slot-grouping";
+import {
+  GroupToggle,
   OverTimeOptions,
   PerDayOptions,
   ProgressOptions,
@@ -173,7 +178,14 @@ export default function TimelinePage() {
     }
     return counts;
   });
-  const slotColors = createMemo(() => buildSlotColors(slots()));
+  const groupable = createMemo(() => hasGroupableSlots(slots()));
+  const groupMode = (): GroupMode =>
+    searchParams.group === "player" && groupable() ? "player" : "slot";
+  const grouping = createMemo(() => buildGrouping(slots(), groupMode()));
+  const slotColors = () => grouping().slotColors;
+  const groupedChecks = createMemo(() =>
+    grouping().remapChecks(checks.data ?? []),
+  );
 
   const tab = (): ChartTab =>
     searchParams.chart === "per-day" || searchParams.chart === "progress"
@@ -225,9 +237,9 @@ export default function TimelinePage() {
   );
   const calendarOption = createMemo(() =>
     buildCalendarOption(
-      checks.data ?? [],
-      slots(),
-      slotColors(),
+      groupedChecks(),
+      grouping().entries,
+      grouping().entryColors,
       offsetMinutes(),
     ),
   );
@@ -239,20 +251,23 @@ export default function TimelinePage() {
   const focusSlot = () => {
     const value =
       typeof searchParams.focus === "string" ? searchParams.focus : "";
-    return slots().some((slot) => String(slot.id) === value) ? value : "";
+    return grouping().entries.some((slot) => String(slot.id) === value)
+      ? value
+      : "";
   };
   const progressOption = createMemo(() =>
     buildProgressOption(
-      checks.data ?? [],
-      slots(),
-      slotColors(),
+      groupedChecks(),
+      grouping().entries,
+      grouping().entryColors,
       granularity() === "episode"
         ? buildEpisodeBuckets(listedEpisodes())
         : buildDayBuckets(checks.data ?? [], offsetMinutes()),
       focusSlot() ? Number(focusSlot()) : undefined,
     ),
   );
-  const progressHeight = () => `${Math.max(420, slots().length * 34 + 140)}px`;
+  const progressHeight = () =>
+    `${Math.max(420, grouping().entries.length * 34 + 140)}px`;
 
   const unavailable = () =>
     sessionId() === undefined ||
@@ -313,49 +328,61 @@ export default function TimelinePage() {
         </Match>
         <Match when={session.data && checks.data}>
           <Card color="ap-grid">
-            <Switch>
-              <Match when={tab() === "over-time"}>
-                <OverTimeOptions
-                  days={days()}
-                  dayCounts={dayCounts()}
-                  episodes={listedEpisodes()}
-                  range={selectedRange()?.value ?? ""}
-                  onRangeChange={(value) =>
-                    setSearchParams({
-                      range: value || undefined,
-                      day: undefined,
-                    })
-                  }
-                  skipGaps={skipGaps()}
-                  canSkipGaps={canSkipGaps()}
-                  onSkipGapsChange={(value) =>
-                    setSearchParams({ skipGaps: value ? "1" : undefined })
-                  }
-                  dragMode={dragMode()}
-                  onDragModeChange={setDragMode}
-                  onResetZoom={resetZoom}
-                />
-              </Match>
-              <Match when={tab() === "per-day"}>
-                <PerDayOptions />
-              </Match>
-              <Match when={tab() === "progress"}>
-                <ProgressOptions
-                  slots={slots()}
-                  focus={focusSlot()}
-                  onFocusChange={(value) =>
-                    setSearchParams({ focus: value || undefined })
-                  }
-                  granularity={granularity()}
-                  canUseEpisodes={listedEpisodes().length > 0}
-                  onGranularityChange={(value) =>
-                    setSearchParams({
-                      granularity: value === "episode" ? value : undefined,
-                    })
-                  }
-                />
-              </Match>
-            </Switch>
+            <div class="flex flex-col gap-3">
+              <GroupToggle
+                mode={groupMode()}
+                disabled={!groupable()}
+                onChange={(mode) =>
+                  setSearchParams({
+                    group: mode === "player" ? "player" : undefined,
+                    focus: undefined,
+                  })
+                }
+              />
+              <Switch>
+                <Match when={tab() === "over-time"}>
+                  <OverTimeOptions
+                    days={days()}
+                    dayCounts={dayCounts()}
+                    episodes={listedEpisodes()}
+                    range={selectedRange()?.value ?? ""}
+                    onRangeChange={(value) =>
+                      setSearchParams({
+                        range: value || undefined,
+                        day: undefined,
+                      })
+                    }
+                    skipGaps={skipGaps()}
+                    canSkipGaps={canSkipGaps()}
+                    onSkipGapsChange={(value) =>
+                      setSearchParams({ skipGaps: value ? "1" : undefined })
+                    }
+                    dragMode={dragMode()}
+                    onDragModeChange={setDragMode}
+                    onResetZoom={resetZoom}
+                  />
+                </Match>
+                <Match when={tab() === "per-day"}>
+                  <PerDayOptions />
+                </Match>
+                <Match when={tab() === "progress"}>
+                  <ProgressOptions
+                    slots={grouping().entries}
+                    focus={focusSlot()}
+                    onFocusChange={(value) =>
+                      setSearchParams({ focus: value || undefined })
+                    }
+                    granularity={granularity()}
+                    canUseEpisodes={listedEpisodes().length > 0}
+                    onGranularityChange={(value) =>
+                      setSearchParams({
+                        granularity: value === "episode" ? value : undefined,
+                      })
+                    }
+                  />
+                </Match>
+              </Switch>
+            </div>
           </Card>
           <Card
             title={activeTab().title}
@@ -413,15 +440,16 @@ export default function TimelinePage() {
                                 option={calendarOption()}
                               />
                               <ul class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                                <For each={slots()}>
+                                <For each={grouping().entries}>
                                   {(slot) => (
                                     <li class="flex items-center gap-2">
                                       <span
                                         class="inline-block size-3 rounded-full"
                                         style={{
-                                          "background-color": slotColors().get(
-                                            Number(slot.id),
-                                          ),
+                                          "background-color":
+                                            grouping().entryColors.get(
+                                              Number(slot.id),
+                                            ),
                                         }}
                                         aria-hidden="true"
                                       />

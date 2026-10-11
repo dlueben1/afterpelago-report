@@ -58,66 +58,6 @@
         }
       }
     },
-    "/api/demo/server-data": {
-      "get": {
-        "tags": [
-          "Demo"
-        ],
-        "operationId": "GetServerData",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ServerDataResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/demo/counter": {
-      "get": {
-        "tags": [
-          "Demo"
-        ],
-        "operationId": "GetCounter",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CounterResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/demo/counter/increment": {
-      "post": {
-        "tags": [
-          "Demo"
-        ],
-        "operationId": "IncrementCounter",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CounterResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/admin/db-info": {
       "get": {
         "tags": [
@@ -425,6 +365,166 @@
         }
       }
     },
+    "/api/sessions/needs-review": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "operationId": "GetSessionsNeedingReview",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NeedsReviewResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions/{id}/claims": {
+      "put": {
+        "tags": [
+          "Sessions"
+        ],
+        "operationId": "ClaimSessionSlots",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimSlotsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions/{id}/slots/{slotId}/ownership": {
+      "put": {
+        "tags": [
+          "Sessions"
+        ],
+        "operationId": "SetSlotOwnership",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "slotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSlotOwnershipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlotOwnerResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/sessions/{id}/favorite": {
       "post": {
         "tags": [
@@ -552,6 +652,137 @@
           },
           "404": {
             "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/sessions/{id}/statistics": {
+      "get": {
+        "tags": [
+          "Statistics"
+        ],
+        "operationId": "GetSessionStatistics",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionStatisticsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/sessions/{id}/slots/{slotId}/statistics": {
+      "get": {
+        "tags": [
+          "Statistics"
+        ],
+        "operationId": "GetSlotStatistics",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "slotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlotStatisticsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/admin/statistics/recalculate": {
+      "post": {
+        "tags": [
+          "Statistics"
+        ],
+        "operationId": "RecalculateStatistics",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecalculationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -1404,6 +1635,28 @@
           }
         }
       },
+      "ClaimSlotsRequest": {
+        "required": [
+          "slotIds"
+        ],
+        "type": "object",
+        "properties": {
+          "slotIds": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          "notInSession": {
+            "type": "boolean"
+          }
+        }
+      },
       "ConnectionResponse": {
         "required": [
           "id",
@@ -1444,27 +1697,6 @@
             "items": {
               "type": "string"
             }
-          }
-        }
-      },
-      "CounterResponse": {
-        "required": [
-          "value",
-          "updatedAt"
-        ],
-        "type": "object",
-        "properties": {
-          "value": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int64"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
           }
         }
       },
@@ -2008,6 +2240,49 @@
           }
         }
       },
+      "NeedsReviewResponse": {
+        "required": [
+          "sessionId",
+          "name",
+          "startUtc",
+          "slotCount",
+          "unclaimedCount"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "startUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "slotCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "unclaimedCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "PackManifest": {
         "required": [
           "name",
@@ -2096,23 +2371,28 @@
           }
         }
       },
-      "SamplePoint": {
+      "RecalculationResponse": {
         "required": [
-          "label",
-          "value"
+          "sessions",
+          "users"
         ],
         "type": "object",
         "properties": {
-          "label": {
-            "type": "string"
-          },
-          "value": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+          "sessions": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
-              "number",
+              "integer",
               "string"
             ],
-            "format": "double"
+            "format": "int32"
+          },
+          "users": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -2152,38 +2432,6 @@
               "string"
             ],
             "format": "int32"
-          }
-        }
-      },
-      "ServerDataResponse": {
-        "required": [
-          "greeting",
-          "serverTime",
-          "randomValue",
-          "samples"
-        ],
-        "type": "object",
-        "properties": {
-          "greeting": {
-            "type": "string"
-          },
-          "serverTime": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "randomValue": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
-            "type": [
-              "number",
-              "string"
-            ],
-            "format": "double"
-          },
-          "samples": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SamplePoint"
-            }
           }
         }
       },
@@ -2464,7 +2712,12 @@
           "goalCompleted",
           "connections",
           "coverUrl",
-          "goalCompletedUtc"
+          "goalCompletedUtc",
+          "ownership",
+          "ownerDiscordUserId",
+          "ownerDisplayName",
+          "ownerAvatarHash",
+          "ownershipSource"
         ],
         "type": "object",
         "properties": {
@@ -2514,6 +2767,68 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "ownership": {
+            "type": "string"
+          },
+          "ownerDiscordUserId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerDisplayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerAvatarHash": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownershipSource": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SessionStatisticsResponse": {
+        "required": [
+          "sessionId",
+          "sessionName",
+          "computedAt",
+          "stats"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "sessionName": {
+            "type": "string"
+          },
+          "computedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "stats": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatResponse"
+            }
           }
         }
       },
@@ -2626,13 +2941,76 @@
           }
         }
       },
+      "SetSlotOwnershipRequest": {
+        "required": [
+          "ownership"
+        ],
+        "type": "object",
+        "properties": {
+          "ownership": {
+            "type": "string"
+          },
+          "ownerDiscordUserId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SlotOwnerResponse": {
+        "required": [
+          "slotId",
+          "ownership",
+          "ownerDiscordUserId",
+          "ownerDisplayName",
+          "ownerAvatarHash"
+        ],
+        "type": "object",
+        "properties": {
+          "slotId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ownership": {
+            "type": "string"
+          },
+          "ownerDiscordUserId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerDisplayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerAvatarHash": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "SlotResponse": {
         "required": [
           "id",
           "teamNumber",
           "playerName",
           "gameName",
-          "goalCompleted"
+          "goalCompleted",
+          "ownership",
+          "ownerDiscordUserId",
+          "ownerDisplayName",
+          "ownerAvatarHash",
+          "ownershipSource"
         ],
         "type": "object",
         "properties": {
@@ -2663,6 +3041,247 @@
           },
           "goalCompleted": {
             "type": "boolean"
+          },
+          "ownership": {
+            "type": "string"
+          },
+          "ownerDiscordUserId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerDisplayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerAvatarHash": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownershipSource": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SlotStatisticsResponse": {
+        "required": [
+          "sessionId",
+          "sessionName",
+          "slot",
+          "teamNumber",
+          "computedAt",
+          "stats"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "sessionName": {
+            "type": "string"
+          },
+          "slot": {
+            "$ref": "#/components/schemas/StatSlotResponse"
+          },
+          "teamNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "computedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "stats": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatResponse"
+            }
+          }
+        }
+      },
+      "StatResponse": {
+        "required": [
+          "id",
+          "available",
+          "reason",
+          "number",
+          "unit",
+          "slot",
+          "otherSlot",
+          "timestamp",
+          "item",
+          "location",
+          "imageUrl",
+          "durationSeconds",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "number": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unit": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "slot": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/StatSlotResponse"
+              }
+            ]
+          },
+          "otherSlot": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/StatSlotResponse"
+              }
+            ]
+          },
+          "timestamp": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "item": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "location": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "durationSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "text": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StatSlotResponse": {
+        "required": [
+          "id",
+          "playerName",
+          "gameName",
+          "coverUrl",
+          "ownership",
+          "ownerDiscordUserId",
+          "ownerDisplayName",
+          "ownerAvatarHash"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "playerName": {
+            "type": "string"
+          },
+          "gameName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "coverUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownership": {
+            "type": "string"
+          },
+          "ownerDiscordUserId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerDisplayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerAvatarHash": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -2731,13 +3350,13 @@
       "name": "Auth"
     },
     {
-      "name": "Demo"
-    },
-    {
       "name": "Admin"
     },
     {
       "name": "Sessions"
+    },
+    {
+      "name": "Statistics"
     },
     {
       "name": "Users"

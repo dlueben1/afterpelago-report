@@ -147,5 +147,5 @@ public static class AuthEndpoints
     internal static string SafeReturnUrl(string? returnUrl) =>
         returnUrl is { Length: > 0 } && returnUrl[0] == '/' && !returnUrl.StartsWith("//", StringComparison.Ordinal) && !returnUrl.Contains('\\')
             ? returnUrl
-            : "/demo";
+            : "/sessions";
 }

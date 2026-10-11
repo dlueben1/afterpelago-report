@@ -1,22 +1,38 @@
 import { A, useNavigate, useParams } from "@solidjs/router";
 import { useQuery } from "@tanstack/solid-query";
-import { For, Match, Show, Switch, createMemo, lazy } from "solid-js";
+import {
+  For,
+  Match,
+  Show,
+  Switch,
+  createMemo,
+  createSignal,
+  lazy,
+} from "solid-js";
 import {
   getGetSessionChecksDailyQueryKey,
   getGetSessionChecksDailyQueryOptions,
   getGetSessionDetailsQueryKey,
   getGetSessionDetailsQueryOptions,
+  getGetSessionStatisticsQueryKey,
+  getGetSessionStatisticsQueryOptions,
   useGetSession,
 } from "../../api/generated/afterpelago";
 import type {
   DailyCheckCountResponse,
   SessionDetailsResponse,
+  SessionStatisticsResponse,
 } from "../../api/generated/model";
 import { ApiError } from "../../api/transport";
 import Card from "../../components/cards/Card";
 import HeroStatCard from "../../components/cards/HeroStatCard";
 import SessionOverviewScenery from "../../components/cards/SessionOverviewScenery";
 import GameBox from "../../components/games/GameBox";
+import ClaimSlotsDialog from "../../components/sessions/ClaimSlotsDialog";
+import SlotOwnerPicker from "../../components/sessions/SlotOwnerPicker";
+import { formatDuration, formatNumber } from "../../components/stats/StatTile";
+import OwnerChip from "../../components/user/OwnerChip";
+import { isAdmin } from "../../lib/auth";
 import {
   formatSessionDate,
   formatSessionTime,
@@ -30,19 +46,8 @@ const EChart = lazy(() =>
 
 function formatPlaytime(value: number | string | null): string {
   if (value === null) return "Unavailable";
-  const seconds = Math.max(0, Math.floor(Number(value)));
-  const parts = [
-    [Math.floor(seconds / 86_400), "day"],
-    [Math.floor((seconds % 86_400) / 3_600), "hour"],
-    [Math.floor((seconds % 3_600) / 60), "minute"],
-    [seconds % 60, "second"],
-  ] as const;
-  return parts
-    .map(
-      ([count, unit]) =>
-        `${count.toLocaleString()} ${unit}${count === 1 ? "" : "s"}`,
-    )
-    .join(", ");
+  const hours = Math.floor(Math.max(0, Number(value)) / 3_600);
+  return `${hours.toLocaleString()} ${hours === 1 ? "hour" : "hours"}`;
 }
 
 function errorMessage(error: unknown): string {
@@ -94,6 +99,26 @@ export default function SessionDetailsPage() {
   const dailyOption = createMemo(() =>
     buildDailyOption(dailyChecks.data ?? []),
   );
+  const statistics = useQuery<SessionStatisticsResponse, ApiError>(() => {
+    const id = sessionId() ?? 0;
+    return getGetSessionStatisticsQueryOptions(id, {
+      query: {
+        queryKey: getGetSessionStatisticsQueryKey(id),
+        enabled: sessionId() !== undefined,
+      },
+    });
+  });
+  const stat = (id: string) => statistics.data?.stats.find((s) => s.id === id);
+  const [claiming, setClaiming] = createSignal<number>();
+  let manageDialog!: HTMLDialogElement;
+  const claimedCount = () =>
+    (session.data?.slots ?? []).filter((slot) => slot.ownership !== "Unclaimed")
+      .length;
+  async function refreshSession() {
+    const id = sessionId();
+    if (id === undefined) return;
+    await Promise.all([session.refetch(), statistics.refetch()]);
+  }
   function openTimeline(day?: string) {
     const id = sessionId();
     if (id === undefined) return;
@@ -200,9 +225,28 @@ export default function SessionDetailsPage() {
                         {details().status}
                       </span>
                     </div>
-                    <p class="text-sm text-ap-muted">
-                      Worlds and players — Coming soon
-                    </p>
+                    <div class="flex flex-wrap items-center gap-2 text-sm">
+                      <span class="text-ap-muted">
+                        {claimedCount()} of {details().slots.length} slots
+                        claimed
+                      </span>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline"
+                        onClick={() => setClaiming(sessionId())}
+                      >
+                        Claim my slots
+                      </button>
+                      <Show when={isAdmin(account.data?.user?.role)}>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-ghost"
+                          onClick={() => manageDialog.showModal()}
+                        >
+                          Manage owners
+                        </button>
+                      </Show>
+                    </div>
                     <dl class="grid gap-3 border-t border-ap-grid pt-4 text-sm sm:grid-cols-2">
                       <div>
                         <dt class="font-semibold text-ap-muted">Started</dt>
@@ -319,7 +363,59 @@ export default function SessionDetailsPage() {
                   color="ap-orange"
                   class="min-h-72"
                 >
-                  <p class="mt-4 text-ap-muted">Coming soon</p>
+                  <Switch>
+                    <Match when={statistics.isPending}>
+                      <div
+                        class="mt-4 flex items-center gap-2 text-ap-muted"
+                        role="status"
+                      >
+                        <span class="loading loading-spinner loading-sm" />
+                        Loading…
+                      </div>
+                    </Match>
+                    <Match
+                      when={statistics.isError || !statistics.data?.computedAt}
+                    >
+                      <p class="mt-4 text-ap-muted">
+                        Statistics are not available for this session yet.
+                      </p>
+                    </Match>
+                    <Match when={statistics.data}>
+                      <dl class="mt-3 flex flex-col gap-2 text-sm">
+                        <div class="flex justify-between gap-3">
+                          <dt class="text-ap-muted">Checks per hour</dt>
+                          <dd class="font-semibold">
+                            {stat("checksPerHour")?.available
+                              ? formatNumber(stat("checksPerHour")!.number)
+                              : "Unavailable"}
+                          </dd>
+                        </div>
+                        <div class="flex justify-between gap-3">
+                          <dt class="text-ap-muted">First to clear</dt>
+                          <dd class="truncate font-semibold">
+                            {stat("firstClear")?.slot?.playerName ??
+                              "Nobody yet"}
+                          </dd>
+                        </div>
+                        <div class="flex justify-between gap-3">
+                          <dt class="text-ap-muted">Most helpful hint</dt>
+                          <dd class="font-semibold">
+                            {stat("mostHelpfulHint")?.available
+                              ? formatDuration(
+                                  stat("mostHelpfulHint")!.durationSeconds,
+                                )
+                              : "Unavailable"}
+                          </dd>
+                        </div>
+                      </dl>
+                      <A
+                        href={`/sessions/${details().id}/stats`}
+                        class="btn btn-sm btn-primary mt-4"
+                      >
+                        View all statistics
+                      </A>
+                    </Match>
+                  </Switch>
                 </Card>
               </div>
               <div class="grid min-w-0 gap-4 lg:grid-cols-2">
@@ -355,6 +451,12 @@ export default function SessionDetailsPage() {
                                 ? Number(slot.teamNumber)
                                 : undefined
                             }
+                            footer={<OwnerChip owner={slot} />}
+                            onClick={() =>
+                              navigate(
+                                `/sessions/${details().id}/slot/${slot.id}`,
+                              )
+                            }
                           />
                         )}
                       </For>
@@ -362,6 +464,39 @@ export default function SessionDetailsPage() {
                   </Show>
                 </Card>
               </div>
+              <ClaimSlotsDialog
+                sessionId={claiming()}
+                onClose={() => setClaiming(undefined)}
+              />
+              <dialog
+                ref={manageDialog}
+                class="modal"
+                aria-labelledby="manage-owners-title"
+              >
+                <div class="modal-box max-w-3xl">
+                  <h2
+                    id="manage-owners-title"
+                    class="font-display text-xl font-bold"
+                  >
+                    Manage slot owners
+                  </h2>
+                  <div class="mt-4">
+                    <SlotOwnerPicker
+                      sessionId={Number(details().id)}
+                      slots={details().slots}
+                      onChanged={refreshSession}
+                    />
+                  </div>
+                  <div class="modal-action">
+                    <form method="dialog">
+                      <button class="btn">Close</button>
+                    </form>
+                  </div>
+                </div>
+                <form method="dialog" class="modal-backdrop">
+                  <button>close</button>
+                </form>
+              </dialog>
             </>
           )}
         </Match>

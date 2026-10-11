@@ -7,13 +7,15 @@ using System.Text.RegularExpressions;
 using Afterpelago.Api;
 using Afterpelago.Data;
 using Afterpelago.Domain.Sessions;
+using Afterpelago.Statistics;
 using Microsoft.EntityFrameworkCore;
 
 namespace Afterpelago.Services;
 
 /// <summary>Imports, publishes, deletes, and repairs persisted Archipelago sessions.</summary>
 public sealed partial class SessionService(
-    AfterpelagoDbContext db, DataPaths paths, TimeProvider time, ILogger<SessionService> logger, GameCatalogService gameCatalog)
+    AfterpelagoDbContext db, DataPaths paths, TimeProvider time, ILogger<SessionService> logger, GameCatalogService gameCatalog,
+    StatisticsService statistics)
 {
     public const long MaximumFileLength = 25L * 1024 * 1024;
     private const int WarningLimit = 100;
@@ -120,7 +122,9 @@ public sealed partial class SessionService(
             .Select(i => new
             {
                 Import = i, i.Session.Name, i.Session.OriginalStart, i.Session.OriginalEnd,
-                Slots = i.Session.Slots.OrderBy(s => s.TeamNumber).ThenBy(s => s.PlayerName).Select(s => new SlotResponse(s.Id, s.TeamNumber, s.PlayerName, s.GameName, s.GoalCompleted)).ToList(),
+                Slots = i.Session.Slots.OrderBy(s => s.TeamNumber).ThenBy(s => s.PlayerName).Select(s => new SlotResponse(s.Id, s.TeamNumber, s.PlayerName, s.GameName, s.GoalCompleted,
+                    s.Ownership.ToString(), s.OwnerDiscordUserId, s.OwnerUser == null ? null : s.OwnerUser.DisplayName, s.OwnerUser == null ? null : s.OwnerUser.AvatarHash,
+                    s.OwnershipSource == null ? null : s.OwnershipSource.ToString())).ToList(),
                 Checks = i.Session.Checks.Count, Hints = i.Session.Hints.Count, Events = i.Session.Events.Count,
                 Gameplay = i.Session.Connections.Count(c => c.Kind == SlotConnectionKind.Gameplay),
                 Trackers = i.Session.Connections.Count(c => c.Kind == SlotConnectionKind.Tracker),
@@ -163,6 +167,12 @@ public sealed partial class SessionService(
         session.State = SessionState.Published;
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
+        try { await statistics.RecalculateSessionAsync(sessionId, ct); }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Publication stands; an admin can rebuild statistics later and startup backfills them.
+            logger.LogError(ex, "Could not calculate statistics for newly published session {SessionId}.", sessionId);
+        }
         return await GetSummaryAsync(sessionId, userId, ct);
     }
 
@@ -177,11 +187,13 @@ public sealed partial class SessionService(
             await db.SaveChangesAsync(ct);
         }
         var importIds = await db.SessionImports.Where(i => i.SessionId == sessionId).Select(i => i.Id).ToListAsync(ct);
+        var owners = await db.Slots.Where(s => s.SessionId == sessionId && s.OwnerDiscordUserId != null).Select(s => s.OwnerDiscordUserId).Distinct().ToListAsync(ct);
         try
         {
             foreach (var importId in importIds) File.Delete(GetImportPath(importId));
             db.Sessions.Remove(session);
             await db.SaveChangesAsync(ct);
+            await statistics.RecalculateUsersAsync(owners, ct);
             return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DbUpdateException)

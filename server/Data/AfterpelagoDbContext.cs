@@ -6,13 +6,13 @@ namespace Afterpelago.Data;
 
 public sealed class AfterpelagoDbContext(DbContextOptions<AfterpelagoDbContext> options) : DbContext(options)
 {
-    public const int DemoCounterId = 1;
-
-    public DbSet<DemoCounter> DemoCounters => Set<DemoCounter>();
-
     public DbSet<AccessRecord> AccessRecords => Set<AccessRecord>();
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<SessionFavorite> SessionFavorites => Set<SessionFavorite>();
+    public DbSet<SessionReview> SessionReviews => Set<SessionReview>();
+    public DbSet<SessionStatistics> SessionStatistics => Set<SessionStatistics>();
+    public DbSet<SlotStatistics> SlotStatistics => Set<SlotStatistics>();
+    public DbSet<UserStatistics> UserStatistics => Set<UserStatistics>();
     public DbSet<SessionImport> SessionImports => Set<SessionImport>();
     public DbSet<Slot> Slots => Set<Slot>();
     public DbSet<SessionLogEvent> SessionLogEvents => Set<SessionLogEvent>();
@@ -39,18 +39,6 @@ public sealed class AfterpelagoDbContext(DbContextOptions<AfterpelagoDbContext> 
             // Stored as text ('Pending'/'Approved'/'Denied') so admins can edit it with plain SQL.
             entity.Property(a => a.Status).HasConversion<string>().HasMaxLength(16);
             entity.HasIndex(a => a.Status);
-        });
-
-        modelBuilder.Entity<DemoCounter>(entity =>
-        {
-            entity.HasKey(c => c.Id);
-            entity.Property(c => c.Id).ValueGeneratedNever();
-            entity.HasData(new DemoCounter
-            {
-                Id = DemoCounterId,
-                Value = 0,
-                UpdatedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
-            });
         });
 
         modelBuilder.Entity<Session>(entity =>
@@ -87,10 +75,46 @@ public sealed class AfterpelagoDbContext(DbContextOptions<AfterpelagoDbContext> 
             entity.HasIndex(i => i.RequestId).IsUnique();
         });
 
+        modelBuilder.Entity<SessionReview>(entity =>
+        {
+            entity.HasKey(r => new { r.DiscordUserId, r.SessionId });
+            entity.Property(r => r.DiscordUserId).HasMaxLength(32);
+            entity.HasOne(r => r.User).WithMany().HasForeignKey(r => r.DiscordUserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(r => r.Session).WithMany().HasForeignKey(r => r.SessionId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SessionStatistics>(entity =>
+        {
+            entity.HasKey(s => s.SessionId);
+            entity.Property(s => s.SessionId).ValueGeneratedNever();
+            entity.HasOne(s => s.Session).WithOne().HasForeignKey<SessionStatistics>(s => s.SessionId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SlotStatistics>(entity =>
+        {
+            entity.HasKey(s => s.SlotId);
+            entity.Property(s => s.SlotId).ValueGeneratedNever();
+            entity.HasIndex(s => s.SessionId);
+            entity.HasOne(s => s.Slot).WithOne().HasForeignKey<SlotStatistics>(s => s.SlotId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserStatistics>(entity =>
+        {
+            entity.HasKey(s => s.DiscordUserId);
+            entity.Property(s => s.DiscordUserId).HasMaxLength(32);
+            entity.HasOne(s => s.User).WithOne().HasForeignKey<UserStatistics>(s => s.DiscordUserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<Slot>(entity =>
         {
             entity.Property(s => s.PlayerName).UseCollation("BINARY").HasMaxLength(200);
             entity.Property(s => s.GameName).HasMaxLength(200);
+            entity.Property(s => s.Ownership).HasConversion<string>().HasMaxLength(16)
+                .HasDefaultValue(SlotOwnership.Unclaimed).HasSentinel(SlotOwnership.Unclaimed);
+            entity.Property(s => s.OwnerDiscordUserId).HasMaxLength(32);
+            entity.Property(s => s.OwnershipSource).HasConversion<string>().HasMaxLength(16);
+            entity.HasOne(s => s.OwnerUser).WithMany().HasForeignKey(s => s.OwnerDiscordUserId).OnDelete(DeleteBehavior.SetNull);
+            entity.HasIndex(s => s.OwnerDiscordUserId);
             entity.HasIndex(s => new { s.SessionId, s.TeamNumber, s.PlayerName }).IsUnique();
         });
 

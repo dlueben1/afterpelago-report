@@ -5,7 +5,7 @@ interface UserAvatarProps {
   size: number;
 }
 
-function getAvatarUrl(
+export function getAvatarUrl(
   userId: string,
   avatarHash: string | null | undefined,
   size: number,

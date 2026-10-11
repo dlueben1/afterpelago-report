@@ -60,31 +60,6 @@ namespace Afterpelago.Data.Migrations
                     b.ToTable("AccessRecords");
                 });
 
-            modelBuilder.Entity("Afterpelago.Domain.DemoCounter", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UpdatedAt")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("Value")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DemoCounters");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            UpdatedAt = "2026-01-01T00:00:00.0000000Z",
-                            Value = 0L
-                        });
-                });
-
             modelBuilder.Entity("Afterpelago.Domain.Game", b =>
                 {
                     b.Property<int>("Id")
@@ -314,6 +289,27 @@ namespace Afterpelago.Data.Migrations
                     b.HasIndex("GameId");
 
                     b.ToTable("GameScrapes");
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.SessionStatistics", b =>
+                {
+                    b.Property<int>("SessionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ComputedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EngineVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ResultsJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("SessionId");
+
+                    b.ToTable("SessionStatistics");
                 });
 
             modelBuilder.Entity("Afterpelago.Domain.Sessions.Check", b =>
@@ -570,6 +566,29 @@ namespace Afterpelago.Data.Migrations
                     b.ToTable("SessionLogEvents");
                 });
 
+            modelBuilder.Entity("Afterpelago.Domain.Sessions.SessionReview", b =>
+                {
+                    b.Property<string>("DiscordUserId")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SessionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("NotInSession")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ReviewedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("DiscordUserId", "SessionId");
+
+                    b.HasIndex("SessionId");
+
+                    b.ToTable("SessionReviews");
+                });
+
             modelBuilder.Entity("Afterpelago.Domain.Sessions.Slot", b =>
                 {
                     b.Property<int>("Id")
@@ -586,6 +605,24 @@ namespace Afterpelago.Data.Migrations
                     b.Property<bool>("GoalCompleted")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("OwnerDiscordUserId")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Ownership")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Unclaimed");
+
+                    b.Property<string>("OwnershipSource")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OwnershipUpdatedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("PlayerName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -601,6 +638,8 @@ namespace Afterpelago.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("GameId");
+
+                    b.HasIndex("OwnerDiscordUserId");
 
                     b.HasIndex("SessionId", "TeamNumber", "PlayerName")
                         .IsUnique();
@@ -649,6 +688,54 @@ namespace Afterpelago.Data.Migrations
                     b.HasIndex("SlotId");
 
                     b.ToTable("SlotConnectionEvents");
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.SlotStatistics", b =>
+                {
+                    b.Property<int>("SlotId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ComputedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EngineVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ResultsJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SessionId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("SlotId");
+
+                    b.HasIndex("SessionId");
+
+                    b.ToTable("SlotStatistics");
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.UserStatistics", b =>
+                {
+                    b.Property<string>("DiscordUserId")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ComputedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EngineVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ResultsJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("DiscordUserId");
+
+                    b.ToTable("UserStatistics");
                 });
 
             modelBuilder.Entity("Afterpelago.Domain.GameImageAsset", b =>
@@ -715,6 +802,17 @@ namespace Afterpelago.Data.Migrations
                         .WithMany()
                         .HasForeignKey("GameId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.SessionStatistics", b =>
+                {
+                    b.HasOne("Afterpelago.Domain.Sessions.Session", "Session")
+                        .WithOne()
+                        .HasForeignKey("Afterpelago.Domain.SessionStatistics", "SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
                 });
 
             modelBuilder.Entity("Afterpelago.Domain.Sessions.Check", b =>
@@ -843,12 +941,36 @@ namespace Afterpelago.Data.Migrations
                     b.Navigation("Slot");
                 });
 
+            modelBuilder.Entity("Afterpelago.Domain.Sessions.SessionReview", b =>
+                {
+                    b.HasOne("Afterpelago.Domain.AccessRecord", "User")
+                        .WithMany()
+                        .HasForeignKey("DiscordUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Afterpelago.Domain.Sessions.Session", "Session")
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Afterpelago.Domain.Sessions.Slot", b =>
                 {
                     b.HasOne("Afterpelago.Domain.Game", "Game")
                         .WithMany()
                         .HasForeignKey("GameId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Afterpelago.Domain.AccessRecord", "OwnerUser")
+                        .WithMany()
+                        .HasForeignKey("OwnerDiscordUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Afterpelago.Domain.Sessions.Session", "Session")
                         .WithMany("Slots")
@@ -857,6 +979,8 @@ namespace Afterpelago.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Game");
+
+                    b.Navigation("OwnerUser");
 
                     b.Navigation("Session");
                 });
@@ -886,6 +1010,28 @@ namespace Afterpelago.Data.Migrations
                     b.Navigation("Session");
 
                     b.Navigation("Slot");
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.SlotStatistics", b =>
+                {
+                    b.HasOne("Afterpelago.Domain.Sessions.Slot", "Slot")
+                        .WithOne()
+                        .HasForeignKey("Afterpelago.Domain.SlotStatistics", "SlotId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Slot");
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.UserStatistics", b =>
+                {
+                    b.HasOne("Afterpelago.Domain.AccessRecord", "User")
+                        .WithOne()
+                        .HasForeignKey("Afterpelago.Domain.UserStatistics", "DiscordUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Afterpelago.Domain.GameItem", b =>

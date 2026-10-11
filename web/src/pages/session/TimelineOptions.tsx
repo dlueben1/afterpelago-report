@@ -145,6 +145,42 @@ export function PerDayOptions() {
   return <p class="text-ap-muted">This chart has no options yet.</p>;
 }
 
+/** Switches every chart between one series per slot and one per owning player. */
+export function GroupToggle(props: {
+  mode: "slot" | "player";
+  disabled: boolean;
+  onChange: (mode: "slot" | "player") => void;
+}) {
+  return (
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="join" role="group" aria-label="Group chart series">
+        <button
+          type="button"
+          class={`btn btn-sm join-item ${props.mode === "slot" ? "btn-primary" : "btn-outline"}`}
+          aria-pressed={props.mode === "slot"}
+          onClick={() => props.onChange("slot")}
+        >
+          By Slot
+        </button>
+        <button
+          type="button"
+          class={`btn btn-sm join-item ${props.mode === "player" ? "btn-primary" : "btn-outline"}`}
+          aria-pressed={props.mode === "player"}
+          disabled={props.disabled}
+          onClick={() => props.onChange("player")}
+        >
+          By Player
+        </button>
+      </div>
+      <Show when={props.disabled}>
+        <span class="text-sm text-ap-muted">
+          No slots have been claimed yet, so players cannot be grouped.
+        </span>
+      </Show>
+    </div>
+  );
+}
+
 export function ProgressOptions(props: {
   slots: readonly SessionSlotResponse[];
   focus: string;

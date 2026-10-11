@@ -30,7 +30,7 @@ import {
 import type {
   AntiforgeryTokenResponse,
   CheckResponse,
-  CounterResponse,
+  ClaimSlotsRequest,
   CustomGameImageResponse,
   DailyCheckCountResponse,
   DatabaseInfoResponse,
@@ -39,17 +39,23 @@ import type {
   GameResponse,
   GameScrapeResponse,
   ImportWebLogBody,
+  NeedsReviewResponse,
   ProblemDetails,
   PublishSessionRequest,
+  RecalculateStatisticsParams,
+  RecalculationResponse,
   SaveGameMappingsRequest,
   ScrapeGameRequest,
-  ServerDataResponse,
   SessionDetailsResponse,
   SessionFavoriteResponse,
   SessionImportResponse,
   SessionResponse,
+  SessionStatisticsResponse,
   SessionSummaryResponse,
   SetSessionFavoriteRequest,
+  SetSlotOwnershipRequest,
+  SlotOwnerResponse,
+  SlotStatisticsResponse,
   UpdateUserApprovalRequest,
   UploadCustomGameImageBody,
   UploadGameCoverBody,
@@ -303,248 +309,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(() => getLogoutMutationOptions(options), queryClient);
-    }
-
-export const getGetServerDataUrl = () => {
-
-
-
-
-  return `/api/demo/server-data`
-}
-
-export const getServerData = async ( options?: Parameters<typeof apiFetch>[1]): Promise<ServerDataResponse> => {
-
-  return apiFetch<ServerDataResponse>(getGetServerDataUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetServerDataQueryKey = () => {
-    return [
-    `/api/demo/server-data`
-    ] as const;
-    }
-
-
-export const getGetServerDataQueryOptions = <TData = Awaited<ReturnType<typeof getServerData>>, TError = ErrorType<unknown>>( options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getServerData>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  getGetServerDataQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getServerData>>> = ({ signal }) => getServerData({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions}
-}
-
-export type GetServerDataQueryResult = NonNullable<Awaited<ReturnType<typeof getServerData>>>
-export type GetServerDataQueryError = ErrorType<unknown>
-
-
-export function useGetServerData<TData = Awaited<ReturnType<typeof getServerData>>, TError = ErrorType<unknown>>(
-  options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getServerData>>, TError, TData>>, 'initialData'> & Pick<
-        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getServerData>>, TError, TData>> , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: () => QueryClient
-  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetServerData<TData = Awaited<ReturnType<typeof getServerData>>, TError = ErrorType<unknown>>(
-  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getServerData>>, TError, TData>>, 'initialData'> & Pick<
-        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getServerData>>, TError, TData>> , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: () => QueryClient
-  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetServerData<TData = Awaited<ReturnType<typeof getServerData>>, TError = ErrorType<unknown>>(
-  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getServerData>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: () => QueryClient
-  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetServerData<TData = Awaited<ReturnType<typeof getServerData>>, TError = ErrorType<unknown>>(
-  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getServerData>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: () => QueryClient
- ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetServerDataQueryOptions(options)
-
-  const query = useQuery(() => getGetServerDataQueryOptions(options), queryClient);
-
-  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
-}
-
-
-
-
-
-
-
-export const getGetCounterUrl = () => {
-
-
-
-
-  return `/api/demo/counter`
-}
-
-export const getCounter = async ( options?: Parameters<typeof apiFetch>[1]): Promise<CounterResponse> => {
-
-  return apiFetch<CounterResponse>(getGetCounterUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetCounterQueryKey = () => {
-    return [
-    `/api/demo/counter`
-    ] as const;
-    }
-
-
-export const getGetCounterQueryOptions = <TData = Awaited<ReturnType<typeof getCounter>>, TError = ErrorType<unknown>>( options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getCounter>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  getGetCounterQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCounter>>> = ({ signal }) => getCounter({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions}
-}
-
-export type GetCounterQueryResult = NonNullable<Awaited<ReturnType<typeof getCounter>>>
-export type GetCounterQueryError = ErrorType<unknown>
-
-
-export function useGetCounter<TData = Awaited<ReturnType<typeof getCounter>>, TError = ErrorType<unknown>>(
-  options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getCounter>>, TError, TData>>, 'initialData'> & Pick<
-        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getCounter>>, TError, TData>> , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: () => QueryClient
-  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetCounter<TData = Awaited<ReturnType<typeof getCounter>>, TError = ErrorType<unknown>>(
-  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getCounter>>, TError, TData>>, 'initialData'> & Pick<
-        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getCounter>>, TError, TData>> , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: () => QueryClient
-  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetCounter<TData = Awaited<ReturnType<typeof getCounter>>, TError = ErrorType<unknown>>(
-  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getCounter>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: () => QueryClient
-  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetCounter<TData = Awaited<ReturnType<typeof getCounter>>, TError = ErrorType<unknown>>(
-  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getCounter>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: () => QueryClient
- ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetCounterQueryOptions(options)
-
-  const query = useQuery(() => getGetCounterQueryOptions(options), queryClient);
-
-  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
-}
-
-
-
-
-
-
-
-export const getIncrementCounterUrl = () => {
-
-
-
-
-  return `/api/demo/counter/increment`
-}
-
-export const incrementCounter = async ( options?: Parameters<typeof apiFetch>[1]): Promise<CounterResponse> => {
-
-  return apiFetch<CounterResponse>(getIncrementCounterUrl(),
-  {
-    ...options,
-    method: 'POST'
-
-
-  }
-);}
-
-
-
-
-
-export const getIncrementCounterMutationKey = () => ['incrementCounter'] as const;
-
-export const getIncrementCounterMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof incrementCounter>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
-): MutationOptions<Awaited<ReturnType<typeof incrementCounter>>, TError,void, TContext> => {
-
-const mutationKey = getIncrementCounterMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof incrementCounter>>, void> = () => {
-
-
-          return  incrementCounter(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type IncrementCounterMutationResult = NonNullable<Awaited<ReturnType<typeof incrementCounter>>>
-
-    export type IncrementCounterMutationError = ErrorType<unknown>
-
-
-    export const useIncrementCounter = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof incrementCounter>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: () => QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof incrementCounter>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(() => getIncrementCounterMutationOptions(options), queryClient);
     }
 
 export const getGetDatabaseInfoUrl = () => {
@@ -1123,6 +887,261 @@ export function useGetSessions<TData = Awaited<ReturnType<typeof getSessions>>, 
 
 
 
+export const getGetSessionsNeedingReviewUrl = () => {
+
+
+
+
+  return `/api/sessions/needs-review`
+}
+
+export const getSessionsNeedingReview = async ( options?: Parameters<typeof apiFetch>[1]): Promise<NeedsReviewResponse[]> => {
+
+  return apiFetch<NeedsReviewResponse[]>(getGetSessionsNeedingReviewUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSessionsNeedingReviewQueryKey = () => {
+    return [
+    `/api/sessions/needs-review`
+    ] as const;
+    }
+
+
+export const getGetSessionsNeedingReviewQueryOptions = <TData = Awaited<ReturnType<typeof getSessionsNeedingReview>>, TError = ErrorType<unknown>>( options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionsNeedingReview>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  getGetSessionsNeedingReviewQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSessionsNeedingReview>>> = ({ signal }) => getSessionsNeedingReview({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions}
+}
+
+export type GetSessionsNeedingReviewQueryResult = NonNullable<Awaited<ReturnType<typeof getSessionsNeedingReview>>>
+export type GetSessionsNeedingReviewQueryError = ErrorType<unknown>
+
+
+export function useGetSessionsNeedingReview<TData = Awaited<ReturnType<typeof getSessionsNeedingReview>>, TError = ErrorType<unknown>>(
+  options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionsNeedingReview>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getSessionsNeedingReview>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessionsNeedingReview<TData = Awaited<ReturnType<typeof getSessionsNeedingReview>>, TError = ErrorType<unknown>>(
+  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionsNeedingReview>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getSessionsNeedingReview>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessionsNeedingReview<TData = Awaited<ReturnType<typeof getSessionsNeedingReview>>, TError = ErrorType<unknown>>(
+  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionsNeedingReview>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetSessionsNeedingReview<TData = Awaited<ReturnType<typeof getSessionsNeedingReview>>, TError = ErrorType<unknown>>(
+  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionsNeedingReview>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+ ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSessionsNeedingReviewQueryOptions(options)
+
+  const query = useQuery(() => getGetSessionsNeedingReviewQueryOptions(options), queryClient);
+
+  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
+}
+
+
+
+
+
+
+
+export const getClaimSessionSlotsUrl = (id: number,) => {
+
+
+
+
+  return `/api/sessions/${id}/claims`
+}
+
+export const claimSessionSlots = async (id: number,
+    claimSlotsRequest: ClaimSlotsRequest, options?: Parameters<typeof apiFetch>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<void>(getClaimSessionSlotsUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(claimSlotsRequest)
+  }
+);}
+
+
+
+
+
+export const getClaimSessionSlotsMutationKey = () => ['claimSessionSlots'] as const;
+
+export const getClaimSessionSlotsMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof claimSessionSlots>>, TError,ClaimSessionSlotsMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): MutationOptions<Awaited<ReturnType<typeof claimSessionSlots>>, TError,ClaimSessionSlotsMutationVariables, TContext> => {
+
+const mutationKey = getClaimSessionSlotsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof claimSessionSlots>>, ClaimSessionSlotsMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  claimSessionSlots(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClaimSessionSlotsMutationResult = NonNullable<Awaited<ReturnType<typeof claimSessionSlots>>>
+    export type ClaimSessionSlotsMutationBody = ClaimSlotsRequest
+    export type ClaimSessionSlotsMutationError = ErrorType<ProblemDetails>
+    export type ClaimSessionSlotsMutationVariables = {id: number;data: ClaimSlotsRequest}
+
+    export const useClaimSessionSlots = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof claimSessionSlots>>, TError,ClaimSessionSlotsMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof claimSessionSlots>>,
+        TError,
+        ClaimSessionSlotsMutationVariables,
+        TContext
+      > => {
+      return useMutation(() => getClaimSessionSlotsMutationOptions(options), queryClient);
+    }
+
+export const getSetSlotOwnershipUrl = (id: number,
+    slotId: number,) => {
+
+
+
+
+  return `/api/sessions/${id}/slots/${slotId}/ownership`
+}
+
+export const setSlotOwnership = async (id: number,
+    slotId: number,
+    setSlotOwnershipRequest: SetSlotOwnershipRequest, options?: Parameters<typeof apiFetch>[1]): Promise<SlotOwnerResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<SlotOwnerResponse>(getSetSlotOwnershipUrl(id,slotId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(setSlotOwnershipRequest)
+  }
+);}
+
+
+
+
+
+export const getSetSlotOwnershipMutationKey = () => ['setSlotOwnership'] as const;
+
+export const getSetSlotOwnershipMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof setSlotOwnership>>, TError,SetSlotOwnershipMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): MutationOptions<Awaited<ReturnType<typeof setSlotOwnership>>, TError,SetSlotOwnershipMutationVariables, TContext> => {
+
+const mutationKey = getSetSlotOwnershipMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setSlotOwnership>>, SetSlotOwnershipMutationVariables> = (props) => {
+          const {id,slotId,data} = props ?? {};
+
+          return  setSlotOwnership(id,slotId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetSlotOwnershipMutationResult = NonNullable<Awaited<ReturnType<typeof setSlotOwnership>>>
+    export type SetSlotOwnershipMutationBody = SetSlotOwnershipRequest
+    export type SetSlotOwnershipMutationError = ErrorType<ProblemDetails>
+    export type SetSlotOwnershipMutationVariables = {id: number;slotId: number;data: SetSlotOwnershipRequest}
+
+    export const useSetSlotOwnership = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof setSlotOwnership>>, TError,SetSlotOwnershipMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setSlotOwnership>>,
+        TError,
+        SetSlotOwnershipMutationVariables,
+        TContext
+      > => {
+      return useMutation(() => getSetSlotOwnershipMutationOptions(options), queryClient);
+    }
+
 export const getSetSessionFavoriteUrl = (id: number,) => {
 
 
@@ -1379,6 +1398,263 @@ export function useGetSessionChecksDaily<TData = Awaited<ReturnType<typeof getSe
 
 
 
+
+export const getGetSessionStatisticsUrl = (id: number,) => {
+
+
+
+
+  return `/api/sessions/${id}/statistics`
+}
+
+export const getSessionStatistics = async (id: number, options?: Parameters<typeof apiFetch>[1]): Promise<SessionStatisticsResponse> => {
+
+  return apiFetch<SessionStatisticsResponse>(getGetSessionStatisticsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSessionStatisticsQueryKey = (id: number,) => {
+    return [
+    `/api/sessions/${id}/statistics`
+    ] as const;
+    }
+
+
+export const getGetSessionStatisticsQueryOptions = <TData = Awaited<ReturnType<typeof getSessionStatistics>>, TError = ErrorType<void>>(id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionStatistics>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  getGetSessionStatisticsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSessionStatistics>>> = ({ signal }) => getSessionStatistics(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions}
+}
+
+export type GetSessionStatisticsQueryResult = NonNullable<Awaited<ReturnType<typeof getSessionStatistics>>>
+export type GetSessionStatisticsQueryError = ErrorType<void>
+
+
+export function useGetSessionStatistics<TData = Awaited<ReturnType<typeof getSessionStatistics>>, TError = ErrorType<void>>(
+ id: number, options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionStatistics>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getSessionStatistics>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessionStatistics<TData = Awaited<ReturnType<typeof getSessionStatistics>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionStatistics>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getSessionStatistics>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessionStatistics<TData = Awaited<ReturnType<typeof getSessionStatistics>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionStatistics>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetSessionStatistics<TData = Awaited<ReturnType<typeof getSessionStatistics>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionStatistics>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+ ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSessionStatisticsQueryOptions(id,options)
+
+  const query = useQuery(() => getGetSessionStatisticsQueryOptions(id,options), queryClient);
+
+  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
+}
+
+
+
+
+
+
+
+export const getGetSlotStatisticsUrl = (id: number,
+    slotId: number,) => {
+
+
+
+
+  return `/api/sessions/${id}/slots/${slotId}/statistics`
+}
+
+export const getSlotStatistics = async (id: number,
+    slotId: number, options?: Parameters<typeof apiFetch>[1]): Promise<SlotStatisticsResponse> => {
+
+  return apiFetch<SlotStatisticsResponse>(getGetSlotStatisticsUrl(id,slotId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSlotStatisticsQueryKey = (id: number,
+    slotId: number,) => {
+    return [
+    `/api/sessions/${id}/slots/${slotId}/statistics`
+    ] as const;
+    }
+
+
+export const getGetSlotStatisticsQueryOptions = <TData = Awaited<ReturnType<typeof getSlotStatistics>>, TError = ErrorType<void>>(id: number,
+    slotId: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSlotStatistics>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  getGetSlotStatisticsQueryKey(id,slotId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSlotStatistics>>> = ({ signal }) => getSlotStatistics(id,slotId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && slotId !== null && slotId !== undefined, ...queryOptions}
+}
+
+export type GetSlotStatisticsQueryResult = NonNullable<Awaited<ReturnType<typeof getSlotStatistics>>>
+export type GetSlotStatisticsQueryError = ErrorType<void>
+
+
+export function useGetSlotStatistics<TData = Awaited<ReturnType<typeof getSlotStatistics>>, TError = ErrorType<void>>(
+ id: number,
+    slotId: number, options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSlotStatistics>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getSlotStatistics>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSlotStatistics<TData = Awaited<ReturnType<typeof getSlotStatistics>>, TError = ErrorType<void>>(
+ id: number,
+    slotId: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSlotStatistics>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getSlotStatistics>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSlotStatistics<TData = Awaited<ReturnType<typeof getSlotStatistics>>, TError = ErrorType<void>>(
+ id: number,
+    slotId: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSlotStatistics>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetSlotStatistics<TData = Awaited<ReturnType<typeof getSlotStatistics>>, TError = ErrorType<void>>(
+ id: number,
+    slotId: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSlotStatistics>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+ ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSlotStatisticsQueryOptions(id,slotId,options)
+
+  const query = useQuery(() => getGetSlotStatisticsQueryOptions(id,slotId,options), queryClient);
+
+  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
+}
+
+
+
+
+
+
+
+export const getRecalculateStatisticsUrl = (params?: RecalculateStatisticsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/statistics/recalculate?${stringifiedParams}` : `/api/admin/statistics/recalculate`
+}
+
+export const recalculateStatistics = async (params?: RecalculateStatisticsParams, options?: Parameters<typeof apiFetch>[1]): Promise<RecalculationResponse> => {
+
+  return apiFetch<RecalculationResponse>(getRecalculateStatisticsUrl(params),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRecalculateStatisticsMutationKey = () => ['recalculateStatistics'] as const;
+
+export const getRecalculateStatisticsMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof recalculateStatistics>>, TError,RecalculateStatisticsMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): MutationOptions<Awaited<ReturnType<typeof recalculateStatistics>>, TError,RecalculateStatisticsMutationVariables, TContext> => {
+
+const mutationKey = getRecalculateStatisticsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recalculateStatistics>>, RecalculateStatisticsMutationVariables> = (props) => {
+          const {params} = props ?? {};
+
+          return  recalculateStatistics(params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecalculateStatisticsMutationResult = NonNullable<Awaited<ReturnType<typeof recalculateStatistics>>>
+
+    export type RecalculateStatisticsMutationError = ErrorType<ProblemDetails>
+    export type RecalculateStatisticsMutationVariables = {params?: RecalculateStatisticsParams}
+
+    export const useRecalculateStatistics = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof recalculateStatistics>>, TError,RecalculateStatisticsMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recalculateStatistics>>,
+        TError,
+        RecalculateStatisticsMutationVariables,
+        TContext
+      > => {
+      return useMutation(() => getRecalculateStatisticsMutationOptions(options), queryClient);
+    }
 
 export const getGetUserApprovalsUrl = () => {
 

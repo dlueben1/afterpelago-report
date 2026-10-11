@@ -4,7 +4,6 @@ import { Match, Show, Switch } from "solid-js";
 import type { JSX, ParentProps } from "solid-js";
 import { useGetSession } from "./api/generated/afterpelago";
 import AccessPendingPage from "./pages/AccessPendingPage";
-import DemoPage from "./pages/DemoPage";
 import LoginPage from "./pages/LoginPage";
 import { queryClient } from "./lib/query-client";
 import AppBar from "./components/nav/AppBar";
@@ -13,6 +12,8 @@ import { isAdmin } from "./lib/auth";
 import AllSessionsPage from "./pages/session/AllSessionsPage";
 import SessionDetailsPage from "./pages/session/SessionDetailsPage";
 import TimelinePage from "./pages/session/TimelinePage";
+import SessionStatsPage from "./pages/session/SessionStatsPage";
+import SlotStatsPage from "./pages/session/SlotStatsPage";
 import SystemInfoPage from "./pages/admin/SystemInfoPage";
 import ImportSessionPage from "./pages/admin/ImportSessionPage";
 import UserAdminPage from "./pages/admin/UserAdminPage";
@@ -81,7 +82,7 @@ function NotFound() {
   return (
     <div class="py-16 text-center">
       <h1 class="text-2xl font-semibold">Page not found</h1>
-      <A href="/demo" class="link link-primary mt-4 inline-block">
+      <A href="/sessions" class="link link-primary mt-4 inline-block">
         Back to the home page
       </A>
     </div>
@@ -92,17 +93,11 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router root={Layout}>
-        <Route path="/" component={() => <Navigate href="/demo" />} />
+        {/* The real dashboard returns at "/" in Milestone 9; until then it redirects. */}
+        <Route path="/" component={() => <Navigate href="/sessions" />} />
+        <Route path="/demo" component={() => <Navigate href="/sessions" />} />
         <Route path="/login" component={LoginPage} />
         <Route path="/access-pending" component={AccessPendingPage} />
-        <Route
-          path="/demo"
-          component={() => (
-            <Protected>
-              <DemoPage />
-            </Protected>
-          )}
-        />
         <Route
           path="/sessions"
           component={() => (
@@ -124,6 +119,22 @@ export default function App() {
           component={() => (
             <Protected>
               <TimelinePage />
+            </Protected>
+          )}
+        />
+        <Route
+          path="/sessions/:id/stats"
+          component={() => (
+            <Protected>
+              <SessionStatsPage />
+            </Protected>
+          )}
+        />
+        <Route
+          path="/sessions/:id/slot/:slotId"
+          component={() => (
+            <Protected>
+              <SlotStatsPage />
             </Protected>
           )}
         />

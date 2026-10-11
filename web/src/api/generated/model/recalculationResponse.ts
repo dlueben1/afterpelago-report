@@ -5,8 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface CounterResponse {
+export interface RecalculationResponse {
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
-  value: number | string;
-  updatedAt: string;
+  sessions: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  users: number | string;
 }

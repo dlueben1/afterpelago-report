@@ -5,7 +5,7 @@ import { useGetSession } from "../api/generated/afterpelago";
 export default function LoginPage(props: { returnUrl?: string }) {
   const session = useGetSession();
   const [params] = useSearchParams();
-  const returnUrl = () => encodeURIComponent(props.returnUrl ?? "/demo");
+  const returnUrl = () => encodeURIComponent(props.returnUrl ?? "/sessions");
 
   return (
     <Switch>
@@ -20,7 +20,7 @@ export default function LoginPage(props: { returnUrl?: string }) {
         </p>
       </Match>
       <Match when={session.data?.isAuthenticated}>
-        <Navigate href="/demo" />
+        <Navigate href="/sessions" />
       </Match>
       <Match when={session.data}>
         {(data) => (

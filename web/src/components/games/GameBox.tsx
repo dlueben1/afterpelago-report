@@ -1,4 +1,4 @@
-import { createEffect, createSignal, Show } from "solid-js";
+import { createEffect, createSignal, Show, type JSX } from "solid-js";
 
 type GameBoxProps = {
   playerName: string;
@@ -6,6 +6,8 @@ type GameBoxProps = {
   coverUrl?: string | null;
   teamNumber?: number;
   onClick?: () => void;
+  /** Extra content under the labels, such as who owns the slot. */
+  footer?: JSX.Element;
 };
 
 export default function GameBox(props: GameBoxProps) {
@@ -72,6 +74,9 @@ export default function GameBox(props: GameBoxProps) {
           <p class="mt-1 text-xs font-semibold text-ap-muted">
             Team {props.teamNumber}
           </p>
+        </Show>
+        <Show when={props.footer}>
+          <div class="mt-1 flex justify-center">{props.footer}</div>
         </Show>
       </div>
     </article>

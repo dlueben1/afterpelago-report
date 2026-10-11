@@ -20,4 +20,13 @@ export interface SessionSlotResponse {
   coverUrl: string | null;
   /** @nullable */
   goalCompletedUtc: string | null;
+  ownership: string;
+  /** @nullable */
+  ownerDiscordUserId: string | null;
+  /** @nullable */
+  ownerDisplayName: string | null;
+  /** @nullable */
+  ownerAvatarHash: string | null;
+  /** @nullable */
+  ownershipSource: string | null;
 }

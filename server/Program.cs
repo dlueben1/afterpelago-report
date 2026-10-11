@@ -3,6 +3,7 @@ using Afterpelago.Api;
 using Afterpelago.Auth;
 using Afterpelago.Data;
 using Afterpelago.Services;
+using Afterpelago.Statistics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http.Features;
 
@@ -23,6 +24,8 @@ builder.Services.AddDbContext<AfterpelagoDbContext>((sp, options) =>
     options.UseSqlite(sp.GetRequiredService<DataPaths>().ConnectionString));
 builder.Services.AddScoped<SessionService>();
 builder.Services.AddScoped<SessionPlaytimeService>();
+builder.Services.AddScoped<SlotOwnershipService>();
+builder.Services.AddStatistics();
 builder.Services.AddScoped<GameCatalogService>();
 builder.Services.AddScoped<GameScrapeService>();
 builder.Services.AddScoped<CoverArtService>();
@@ -44,6 +47,7 @@ if (!isContractGeneration && !EF.IsDesignTime)
     using var scope = app.Services.CreateScope();
     await scope.ServiceProvider.GetRequiredService<AfterpelagoDbContext>().Database.MigrateAsync();
     await scope.ServiceProvider.GetRequiredService<SessionService>().CleanupAsync(CancellationToken.None);
+    await scope.ServiceProvider.GetRequiredService<StatisticsService>().BackfillAsync(CancellationToken.None);
     await scope.ServiceProvider.GetRequiredService<GameScrapeService>().CleanupAsync(CancellationToken.None);
 }
 
@@ -85,9 +89,9 @@ if (app.Environment.IsDevelopment() && app.Services.GetRequiredService<AuthCapab
     app.MapDevLoginEndpoint();
 }
 
-app.MapDemoEndpoints().RequireAuthorization();
 app.MapAdminEndpoints().RequireAuthorization(AuthSetup.AdminOnlyPolicy);
 app.MapSessionEndpoints();
+app.MapStatisticsEndpoints();
 app.MapUsersEndpoints();
 app.MapGameEndpoints();
 
