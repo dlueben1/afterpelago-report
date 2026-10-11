@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Security.Claims;
 using Afterpelago.Auth;
 using Afterpelago.Data;
 using Afterpelago.Domain.Sessions;
@@ -32,6 +33,9 @@ public static class SessionEndpoints
             .Produces(StatusCodes.Status204NoContent).ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         api.MapGet("", GetSessions).WithName("GetSessions");
+        api.MapPost("/{id:int}/favorite", SetFavorite).WithName("SetSessionFavorite")
+            .Produces<SessionFavoriteResponse>().ProducesProblem(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound);
         api.MapGet("/{id:int}", GetSession).WithName("GetSessionDetails")
             .Produces<SessionDetailsResponse>().Produces(StatusCodes.Status404NotFound);
         api.MapGet("/{id:int}/checks", GetChecks).WithName("GetSessionChecks")
@@ -61,11 +65,11 @@ public static class SessionEndpoints
     }
 
     /// <summary>Publishes a draft with its selected source UTC offset.</summary>
-    private static async Task<IResult> Publish(int id, PublishSessionRequest request, SessionService sessions, CancellationToken ct)
+    private static async Task<IResult> Publish(int id, PublishSessionRequest request, SessionService sessions, ClaimsPrincipal user, CancellationToken ct)
     {
         try
         {
-            var result = await sessions.PublishAsync(id, request.SourceUtcOffsetMinutes, ct);
+            var result = await sessions.PublishAsync(id, request.SourceUtcOffsetMinutes, user.FindFirstValue(ClaimTypes.NameIdentifier)!, ct);
             return result is null ? TypedResults.Problem(title: "Draft session not found.", statusCode: 404) : TypedResults.Ok(result);
         }
         catch (SessionInputException ex) { return TypedResults.Problem(title: "Invalid source UTC offset.", detail: ex.Message, statusCode: 400); }
@@ -79,14 +83,30 @@ public static class SessionEndpoints
             : TypedResults.Problem(title: "Session deletion is incomplete.", detail: "The session remains hidden and deletion can be retried.", statusCode: 503);
 
     /// <summary>Lists published sessions without loading their event histories.</summary>
-    private static async Task<IReadOnlyList<SessionSummaryResponse>> GetSessions(AfterpelagoDbContext db, CancellationToken ct) =>
-        await db.Sessions.AsNoTracking().Where(s => s.State == SessionState.Published)
-            .OrderByDescending(s => s.StartUtc)
-            .Select(s => new SessionSummaryResponse(s.Id, s.Name, s.StartUtc!.Value, s.EndUtc!.Value, s.Slots.Count, s.Checks.Count, s.Slots.Count(x => x.GoalCompleted)))
-            .ToListAsync(ct);
+    private static Task<IReadOnlyList<SessionSummaryResponse>> GetSessions(AfterpelagoDbContext db, ClaimsPrincipal user, CancellationToken ct) =>
+        SessionOverview.ListAsync(db, user.FindFirstValue(ClaimTypes.NameIdentifier)!, null, ct);
+
+    /// <summary>Sets the caller's bookmark atomically; repeated requests do not toggle it.</summary>
+    private static async Task<IResult> SetFavorite(int id, SetSessionFavoriteRequest request, AfterpelagoDbContext db, ClaimsPrincipal user, CancellationToken ct)
+    {
+        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        if (!await db.Sessions.AnyAsync(s => s.Id == id && s.State == SessionState.Published, ct))
+            return TypedResults.NotFound();
+        if (request.IsFavorite)
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO SessionFavorites (DiscordUserId, SessionId) VALUES ({userId}, {id}) ON CONFLICT (DiscordUserId, SessionId) DO NOTHING", ct);
+        }
+        else
+        {
+            await db.SessionFavorites.Where(f => f.DiscordUserId == userId && f.SessionId == id).ExecuteDeleteAsync(ct);
+        }
+        await transaction.CommitAsync(ct);
+        return TypedResults.Ok(new SessionFavoriteResponse(id, request.IsFavorite));
+    }
 
     /// <summary>Returns published session details without the full check history.</summary>
-    private static async Task<IResult> GetSession(int id, AfterpelagoDbContext db, CancellationToken ct)
+    private static async Task<IResult> GetSession(int id, AfterpelagoDbContext db, SessionPlaytimeService playtime, ClaimsPrincipal user, CancellationToken ct)
     {
         var session = await db.Sessions.AsNoTracking().AsSplitQuery()
             .Include(s => s.Slots).ThenInclude(s => s.Connections).ThenInclude(c => c.LogEvent)
@@ -100,7 +120,14 @@ public static class SessionEndpoints
                         c.TagsJson is null ? [] : JsonSerializer.Deserialize<string[]>(c.TagsJson) ?? [])).ToList())).ToList();
         var imports = session.Imports.OrderBy(i => i.ImportedAt)
             .Select(i => new SessionImportInfoResponse(i.Id, i.ImportedAt, i.Method.ToString(), i.OriginalFileName, i.ByteLength, i.Sha256, i.WarningCount)).ToList();
-        return TypedResults.Ok(new SessionDetailsResponse(session.Id, session.Name, session.StartUtc!.Value, session.EndUtc!.Value, slots, imports));
+        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var isFavorite = await db.SessionFavorites.AnyAsync(f => f.SessionId == id && f.DiscordUserId == userId, ct);
+        var counts = await db.Sessions.AsNoTracking().Where(s => s.Id == id && s.State == SessionState.Published)
+            .Select(s => new { CheckCount = s.Checks.Count, HintCount = s.Hints.Count }).SingleOrDefaultAsync(ct);
+        if (counts is null) return TypedResults.NotFound();
+        var totalPlaytimeSeconds = await playtime.GetTotalPlaytimeSecondsAsync(id, session.StartUtc!.Value, session.EndUtc!.Value, ct);
+        return TypedResults.Ok(new SessionDetailsResponse(session.Id, session.Name, session.StartUtc!.Value, session.EndUtc!.Value,
+            slots, imports, session.Status.ToString(), isFavorite, counts.CheckCount, counts.HintCount, totalPlaytimeSeconds));
     }
 
     /// <summary>Returns the complete ordered check history for a published session.</summary>

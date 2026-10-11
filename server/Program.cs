@@ -22,6 +22,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddDbContext<AfterpelagoDbContext>((sp, options) =>
     options.UseSqlite(sp.GetRequiredService<DataPaths>().ConnectionString));
 builder.Services.AddScoped<SessionService>();
+builder.Services.AddScoped<SessionPlaytimeService>();
 builder.Services.Configure<FormOptions>(options => options.MultipartBodyLengthLimit = SessionService.MaximumFileLength + 1024 * 1024);
 
 builder.AddAfterpelagoAuth(isContractGeneration);

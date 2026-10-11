@@ -12,6 +12,7 @@ public sealed class AfterpelagoDbContext(DbContextOptions<AfterpelagoDbContext> 
 
     public DbSet<AccessRecord> AccessRecords => Set<AccessRecord>();
     public DbSet<Session> Sessions => Set<Session>();
+    public DbSet<SessionFavorite> SessionFavorites => Set<SessionFavorite>();
     public DbSet<SessionImport> SessionImports => Set<SessionImport>();
     public DbSet<Slot> Slots => Set<Slot>();
     public DbSet<SessionLogEvent> SessionLogEvents => Set<SessionLogEvent>();
@@ -51,6 +52,8 @@ public sealed class AfterpelagoDbContext(DbContextOptions<AfterpelagoDbContext> 
             entity.Ignore(s => s.ImportHistory);
             entity.Property(s => s.Name).HasMaxLength(200);
             entity.Property(s => s.State).HasConversion<string>().HasMaxLength(16);
+            entity.Property(s => s.Status).HasConversion<string>().HasMaxLength(16)
+                .HasDefaultValue(SessionStatus.Finished).HasSentinel(SessionStatus.Finished);
             entity.HasMany(s => s.Imports).WithOne(i => i.Session).HasForeignKey(i => i.SessionId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(s => s.Slots).WithOne(s => s.Session).HasForeignKey(s => s.SessionId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(s => s.Events).WithOne(e => e.Session).HasForeignKey(e => e.SessionId).OnDelete(DeleteBehavior.Cascade);
@@ -58,6 +61,14 @@ public sealed class AfterpelagoDbContext(DbContextOptions<AfterpelagoDbContext> 
             entity.HasMany(s => s.Checks).WithOne(c => c.Session).HasForeignKey(c => c.SessionId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(s => s.Hints).WithOne(h => h.Session).HasForeignKey(h => h.SessionId).OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(s => new { s.State, s.StartUtc });
+        });
+
+        modelBuilder.Entity<SessionFavorite>(entity =>
+        {
+            entity.HasKey(f => new { f.DiscordUserId, f.SessionId });
+            entity.Property(f => f.DiscordUserId).HasMaxLength(32);
+            entity.HasOne(f => f.User).WithMany().HasForeignKey(f => f.DiscordUserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(f => f.Session).WithMany(s => s.Favorites).HasForeignKey(f => f.SessionId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<SessionImport>(entity =>

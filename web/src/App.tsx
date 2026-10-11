@@ -11,6 +11,7 @@ import AppBar from "./components/nav/AppBar";
 import SidebarContent from "./components/nav/SidebarContent";
 import { isAdmin } from "./lib/auth";
 import AllSessionsPage from "./pages/session/AllSessionsPage";
+import SessionDetailsPage from "./pages/session/SessionDetailsPage";
 import SystemInfoPage from "./pages/admin/SystemInfoPage";
 import ImportSessionPage from "./pages/admin/ImportSessionPage";
 import UserAdminPage from "./pages/admin/UserAdminPage";
@@ -105,6 +106,14 @@ export default function App() {
           component={() => (
             <Protected>
               <AllSessionsPage />
+            </Protected>
+          )}
+        />
+        <Route
+          path="/sessions/:id"
+          component={() => (
+            <Protected>
+              <SessionDetailsPage />
             </Protected>
           )}
         />

@@ -425,6 +425,61 @@
         }
       }
     },
+    "/api/sessions/{id}/favorite": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "operationId": "SetSessionFavorite",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSessionFavoriteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionFavoriteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/sessions/{id}/checks": {
       "get": {
         "tags": [
@@ -915,7 +970,12 @@
           "startUtc",
           "endUtc",
           "slots",
-          "imports"
+          "imports",
+          "status",
+          "isFavorite",
+          "checkCount",
+          "hintCount",
+          "totalPlaytimeSeconds"
         ],
         "type": "object",
         "properties": {
@@ -949,6 +1009,57 @@
             "items": {
               "$ref": "#/components/schemas/SessionImportInfoResponse"
             }
+          },
+          "status": {
+            "type": "string"
+          },
+          "isFavorite": {
+            "type": "boolean"
+          },
+          "checkCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "hintCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPlaytimeSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "SessionFavoriteResponse": {
+        "required": [
+          "sessionId",
+          "isFavorite"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isFavorite": {
+            "type": "boolean"
           }
         }
       },
@@ -1159,7 +1270,10 @@
           "endUtc",
           "slotCount",
           "checkCount",
-          "completedSlotCount"
+          "completedSlotCount",
+          "status",
+          "isFavorite",
+          "gameNames"
         ],
         "type": "object",
         "properties": {
@@ -1205,6 +1319,18 @@
               "string"
             ],
             "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          },
+          "isFavorite": {
+            "type": "boolean"
+          },
+          "gameNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -1231,6 +1357,17 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "SetSessionFavoriteRequest": {
+        "required": [
+          "isFavorite"
+        ],
+        "type": "object",
+        "properties": {
+          "isFavorite": {
+            "type": "boolean"
           }
         }
       },

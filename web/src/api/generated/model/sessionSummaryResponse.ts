@@ -17,4 +17,7 @@ export interface SessionSummaryResponse {
   checkCount: number | string;
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
   completedSlotCount: number | string;
+  status: string;
+  isFavorite: boolean;
+  gameNames: string[];
 }

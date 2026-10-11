@@ -15,4 +15,15 @@ export interface SessionDetailsResponse {
   endUtc: string;
   slots: SessionSlotResponse[];
   imports: SessionImportInfoResponse[];
+  status: string;
+  isFavorite: boolean;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  checkCount: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  hintCount: number | string;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)$
+     */
+  totalPlaytimeSeconds: number | string | null;
 }

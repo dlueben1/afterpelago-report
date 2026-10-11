@@ -17,5 +17,6 @@ artifacts/
 web/.api-check/
 web/src/api/.generated-check/
 
-# Copilot
+# Copilot/Codex
 .github/copilot-instructions.md
+AGENTS.md

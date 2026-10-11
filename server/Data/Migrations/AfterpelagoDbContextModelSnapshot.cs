@@ -206,11 +206,34 @@ namespace Afterpelago.Data.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Finished");
+
                     b.HasKey("Id");
 
                     b.HasIndex("State", "StartUtc");
 
                     b.ToTable("Sessions");
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.Sessions.SessionFavorite", b =>
+                {
+                    b.Property<string>("DiscordUserId")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SessionId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("DiscordUserId", "SessionId");
+
+                    b.HasIndex("SessionId");
+
+                    b.ToTable("SessionFavorites");
                 });
 
             modelBuilder.Entity("Afterpelago.Domain.Sessions.SessionImport", b =>
@@ -462,6 +485,25 @@ namespace Afterpelago.Data.Migrations
                     b.Navigation("Session");
                 });
 
+            modelBuilder.Entity("Afterpelago.Domain.Sessions.SessionFavorite", b =>
+                {
+                    b.HasOne("Afterpelago.Domain.AccessRecord", "User")
+                        .WithMany()
+                        .HasForeignKey("DiscordUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Afterpelago.Domain.Sessions.Session", "Session")
+                        .WithMany("Favorites")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Afterpelago.Domain.Sessions.SessionImport", b =>
                 {
                     b.HasOne("Afterpelago.Domain.Sessions.Session", "Session")
@@ -544,6 +586,8 @@ namespace Afterpelago.Data.Migrations
                     b.Navigation("Connections");
 
                     b.Navigation("Events");
+
+                    b.Navigation("Favorites");
 
                     b.Navigation("Hints");
 

@@ -46,7 +46,8 @@ export default function SidebarContent(props: { role?: string | null }) {
       <ul class="menu w-full gap-1 px-2 py-3 text-sm">
         <For each={items}>
           {(item) => {
-            const active = () => location.pathname === item.href;
+            const active = () => location.pathname === item.href
+              || (item.href === "/sessions" && location.pathname.startsWith("/sessions/"));
 
             return (
               <li>

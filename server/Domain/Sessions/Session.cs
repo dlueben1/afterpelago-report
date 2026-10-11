@@ -1,6 +1,7 @@
 ﻿namespace Afterpelago.Domain.Sessions
 {
     public enum SessionState { Draft, Published, Deleting }
+    public enum SessionStatus { Live, Abandoned, Finished }
     public enum SessionImportMethod { WebLog, SpoilerLog }
 
     /// <summary>
@@ -49,6 +50,7 @@
         /// </summary>
         public string Name { get; set; } = string.Empty;
         public SessionState State { get; set; }
+        public SessionStatus Status { get; set; } = SessionStatus.Finished;
         public DateTimeOffset CreatedAt { get; set; }
         public DateTime OriginalStart { get; set; }
         public DateTime OriginalEnd { get; set; }
@@ -71,6 +73,7 @@
         public ICollection<SessionLogEvent> Events { get; set; } = [];
         public ICollection<Check> Checks { get; set; } = [];
         public ICollection<Hint> Hints { get; set; } = [];
+        public ICollection<SessionFavorite> Favorites { get; set; } = [];
         public ICollection<SlotConnectionEvent> Connections { get; set; } = [];
     }
 }

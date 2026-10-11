@@ -1,0 +1,132 @@
+import { A, useParams } from "@solidjs/router";
+import { useQuery } from "@tanstack/solid-query";
+import { Match, Show, Switch, createMemo } from "solid-js";
+import { getGetSessionDetailsQueryKey, getGetSessionDetailsQueryOptions, useGetSession } from "../../api/generated/afterpelago";
+import type { SessionDetailsResponse } from "../../api/generated/model";
+import { ApiError } from "../../api/transport";
+import Card from "../../components/cards/Card";
+import HeroStatCard from "../../components/cards/HeroStatCard";
+import SessionOverviewScenery from "../../components/cards/SessionOverviewScenery";
+import { formatSessionDate, formatSessionTime } from "../../lib/session-overview";
+
+function formatPlaytime(value: number | string | null): string {
+  if (value === null) return "Unavailable";
+  const seconds = Math.max(0, Math.floor(Number(value)));
+  const parts = [
+    [Math.floor(seconds / 86_400), "day"],
+    [Math.floor(seconds % 86_400 / 3_600), "hour"],
+    [Math.floor(seconds % 3_600 / 60), "minute"],
+    [seconds % 60, "second"],
+  ] as const;
+  return parts.map(([count, unit]) => `${count.toLocaleString()} ${unit}${count === 1 ? "" : "s"}`).join(", ");
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof ApiError) return error.detail ?? error.message;
+  return error instanceof Error ? error.message : "Please try again.";
+}
+
+function statusClass(status: string): string {
+  return status === "Live" ? "badge-success" : status === "Abandoned" ? "badge-warning" : "badge-info";
+}
+
+export default function SessionDetailsPage() {
+  const params = useParams<{ id: string }>();
+  const account = useGetSession();
+  const sessionId = createMemo(() => {
+    const value = Number(params.id);
+    return /^\d+$/.test(params.id) && Number.isInteger(value) && value > 0 && value <= 2_147_483_647 ? value : undefined;
+  });
+  const session = useQuery<SessionDetailsResponse, ApiError>(() => {
+    const id = sessionId() ?? 0;
+    const userId = account.data?.user?.discordUserId;
+    return getGetSessionDetailsQueryOptions(id, { query: {
+      queryKey: [...getGetSessionDetailsQueryKey(id), userId],
+      enabled: sessionId() !== undefined && !!userId,
+    } });
+  });
+  const unavailable = () => sessionId() === undefined || (session.error instanceof ApiError && session.error.status === 404);
+
+  return (
+    <div class="flex min-w-0 flex-col gap-4">
+      <A href="/sessions" class="link link-primary inline-flex items-center gap-2 self-start font-semibold">
+        <span class="icon-[tabler--arrow-left] size-4" aria-hidden="true" />Back to Sessions
+      </A>
+      <Switch>
+        <Match when={unavailable()}>
+          <Card title="Session unavailable" subtitle="This session does not exist or is no longer available." color="ap-blue" />
+        </Match>
+        <Match when={session.isPending}>
+          <div class="flex min-h-64 items-center justify-center gap-3" role="status">
+            <span class="loading loading-spinner text-primary" aria-hidden="true" /><span>Loading session…</span>
+          </div>
+        </Match>
+        <Match when={session.isError && !session.data}>
+          <div class="alert alert-error" role="alert">
+            <span>Could not load the session: {errorMessage(session.error)}</span>
+            <button type="button" class="btn btn-sm" disabled={session.isFetching} onClick={() => session.refetch()}>Retry</button>
+          </div>
+        </Match>
+        <Match when={session.data}>
+          {(details) => <>
+            <Show when={session.isError}>
+              <div class="alert alert-error" role="alert">
+                <span>Could not refresh this session: {errorMessage(session.error)}</span>
+                <button type="button" class="btn btn-sm" disabled={session.isFetching} onClick={() => session.refetch()}>Retry</button>
+              </div>
+            </Show>
+            <div class="grid min-w-0 gap-4 lg:grid-cols-12">
+              <Card title="Session Overview" icon="icon-[tabler--device-gamepad-filled]" color="ap-blue"
+                class="lg:col-span-5" backdrop={<SessionOverviewScenery />}>
+                <div class="flex flex-col gap-4">
+                  <div class="flex flex-wrap items-center gap-3">
+                    <h1 class="min-w-0 break-words font-display text-xl font-extrabold">{details().name}</h1>
+                    <span class={`badge badge-soft shrink-0 ${statusClass(details().status)}`}>{details().status}</span>
+                  </div>
+                  <p class="text-sm text-ap-muted">Worlds and players — Coming soon</p>
+                  <dl class="grid gap-3 border-t border-ap-grid pt-4 text-sm sm:grid-cols-2">
+                    <div><dt class="font-semibold text-ap-muted">Started</dt><dd class="mt-1"><time datetime={details().startUtc}>
+                      {formatSessionDate(details().startUtc)}<span class="block">{formatSessionTime(details().startUtc)}</span>
+                    </time></dd></div>
+                    <div><dt class="font-semibold text-ap-muted">Ended</dt><dd class="mt-1"><time datetime={details().endUtc}>
+                      {formatSessionDate(details().endUtc)}<span class="block">{formatSessionTime(details().endUtc)}</span>
+                    </time></dd></div>
+                  </dl>
+                  <div class="flex items-start gap-3 rounded-box border border-ap-green/20 bg-base-100/90 p-3">
+                    <span class="icon-[tabler--clock] mt-1 size-6 shrink-0 text-ap-green" aria-hidden="true" />
+                    <div class="min-w-0">
+                      <p class="font-bold text-base-content" aria-live="polite">{formatPlaytime(details().totalPlaytimeSeconds)}</p>
+                      <p class="text-sm text-ap-muted">Total Playtime</p>
+                      <p class="mt-1 text-xs text-ap-muted">Time with at least one player connected to a game.</p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+              <div class="grid min-w-0 gap-4 sm:grid-cols-2 lg:col-span-7 lg:self-start">
+                <HeroStatCard label="Total Checks" value={Number(details().checkCount).toLocaleString()} color="ap-violet" icon="icon-[tabler--cube]" class="min-h-32" />
+                <HeroStatCard label="Hints Used" value={Number(details().hintCount).toLocaleString()} color="ap-gold" icon="icon-[tabler--bulb]" class="min-h-32" />
+              </div>
+            </div>
+            <div class="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+              <Card title="Timeline Explorer" subtitle="Explore the flow of checks, hints, and key events throughout the session."
+                icon="icon-[tabler--timeline]" color="ap-pink" class="min-h-72">
+                <div class="min-h-40" aria-hidden="true" />
+              </Card>
+              <Card title="Session Statistics" icon="icon-[tabler--chart-bar]" color="ap-orange" class="min-h-72">
+                <p class="mt-4 text-ap-muted">Coming soon</p>
+              </Card>
+            </div>
+            <div class="grid min-w-0 gap-4 lg:grid-cols-2">
+              <Card title="Sphere Viewer" icon="icon-[tabler--circles]" color="ap-orange" class="min-h-56">
+                <p class="mt-4 text-ap-muted">Coming soon</p>
+              </Card>
+              <Card title="Worlds" icon="icon-[tabler--world]" color="ap-violet" class="min-h-56">
+                <p class="mt-4 text-ap-muted">Coming soon</p>
+              </Card>
+            </div>
+          </>}
+        </Match>
+      </Switch>
+    </div>
+  );
+}

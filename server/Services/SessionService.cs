@@ -131,7 +131,7 @@ public sealed partial class SessionService(
     }
 
     /// <summary>Normalizes draft timestamps and makes the session visible to users.</summary>
-    public async Task<SessionSummaryResponse?> PublishAsync(int sessionId, int offsetMinutes, CancellationToken ct)
+    public async Task<SessionSummaryResponse?> PublishAsync(int sessionId, int offsetMinutes, string userId, CancellationToken ct)
     {
         if (offsetMinutes is < -840 or > 840) throw new SessionInputException("The source UTC offset must be between -840 and 840 minutes.");
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
@@ -141,7 +141,7 @@ public sealed partial class SessionService(
         {
             if (session.SourceUtcOffsetMinutes != offsetMinutes) throw new SessionConflictException("The session was already published with a different UTC offset.");
             await transaction.CommitAsync(ct);
-            return await GetSummaryAsync(sessionId, ct);
+            return await GetSummaryAsync(sessionId, userId, ct);
         }
 
         var offset = TimeSpan.FromMinutes(offsetMinutes);
@@ -162,7 +162,7 @@ public sealed partial class SessionService(
         session.State = SessionState.Published;
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
-        return await GetSummaryAsync(sessionId, ct);
+        return await GetSummaryAsync(sessionId, userId, ct);
     }
 
     /// <summary>Deletes a session and all files imported into it.</summary>
@@ -235,6 +235,7 @@ public sealed partial class SessionService(
     private async Task ParseAndPersistAsync(string temporaryPath, Session session, SessionImport import, WarningBag warnings, CancellationToken ct)
     {
         var slots = session.Slots.ToDictionary(s => (s.TeamNumber, s.PlayerName));
+        var releasedSlots = new HashSet<int>();
         var pending = 0;
         await ReadLinesAsync(temporaryPath, async (line, number) =>
         {
@@ -267,6 +268,7 @@ public sealed partial class SessionService(
             if (parsed.Connection is { } connection && primary is not null)
                 db.SlotConnectionEvents.Add(new SlotConnectionEvent { SessionId = session.Id, SlotId = primary.Id, LogEvent = logEvent, Action = connection.Action, Kind = connection.Kind, ClientVersion = connection.Version, TagsJson = JsonSerializer.Serialize(connection.Tags) });
             if (parsed.Category == SessionEventCategory.GoalCompleted && primary is not null) primary.GoalCompleted = true;
+            if (parsed.Category == SessionEventCategory.ItemsReleased && primary is not null) releasedSlots.Add(primary.Id);
 
             if (++pending >= 500)
             {
@@ -275,6 +277,8 @@ public sealed partial class SessionService(
                 pending = 0;
             }
         }, ct);
+        session.Status = session.Slots.All(s => s.GoalCompleted || releasedSlots.Contains(s.Id))
+            ? SessionStatus.Finished : SessionStatus.Abandoned;
         await db.SaveChangesAsync(ct);
     }
 
@@ -430,8 +434,8 @@ public sealed partial class SessionService(
     private static void TryDeleteFile(string path) { try { File.Delete(path); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
 
     /// <summary>Loads one published session summary.</summary>
-    private async Task<SessionSummaryResponse?> GetSummaryAsync(int id, CancellationToken ct) => await db.Sessions.AsNoTracking().Where(s => s.Id == id && s.State == SessionState.Published)
-        .Select(s => new SessionSummaryResponse(s.Id, s.Name, s.StartUtc!.Value, s.EndUtc!.Value, s.Slots.Count, s.Checks.Count, s.Slots.Count(x => x.GoalCompleted))).SingleOrDefaultAsync(ct);
+    private async Task<SessionSummaryResponse?> GetSummaryAsync(int id, string userId, CancellationToken ct) =>
+        (await SessionOverview.ListAsync(db, userId, id, ct)).SingleOrDefault();
 
     /// <summary>Streams UTF-8 lines through a synchronous visitor.</summary>
     private static async Task ReadLinesAsync(string path, Action<string, int> visit, CancellationToken ct)
