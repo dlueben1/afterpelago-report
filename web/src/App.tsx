@@ -2,33 +2,45 @@ import { QueryClientProvider } from "@tanstack/solid-query";
 import { A, Navigate, Route, Router } from "@solidjs/router";
 import { Match, Show, Switch } from "solid-js";
 import type { JSX, ParentProps } from "solid-js";
-import { useGetSession, useLogout } from "./api/generated/afterpelago";
+import { useGetSession } from "./api/generated/afterpelago";
 import AccessPendingPage from "./pages/AccessPendingPage";
 import DemoPage from "./pages/DemoPage";
 import LoginPage from "./pages/LoginPage";
 import { queryClient } from "./lib/query-client";
 import AppBar from "./components/nav/AppBar";
+import SidebarContent from "./components/nav/SidebarContent";
+import { isAdmin } from "./lib/auth";
+import AllSessionsPage from "./pages/session/AllSessionsPage";
+import SystemInfoPage from "./pages/admin/SystemInfoPage";
+import ImportSessionPage from "./pages/admin/ImportSessionPage";
+import UserAdminPage from "./pages/admin/UserAdminPage";
 
 function Layout(props: ParentProps) {
+  const session = useGetSession();
   return (
-    <div class="min-h-screen bg-base-200">
-      {/* <header class="navbar justify-between border-b border-base-300 bg-base-100 px-4 md:px-8">
-        <A href="/demo" class="text-lg font-bold tracking-tight text-primary">Afterpelago</A>
-        <UserMenu />
-      </header> */}
+    <div class="min-h-screen bg-base-200 flex flex-col">
+      {/* Top-Level AppBar */}
       <AppBar />
-      <div class="flex flex-row">
-        <aside class="w-64 border-r border-base-300 bg-base-100 p-4">
-          {/* Sidebar content goes here */}
-        </aside>
-        <main class="mx-auto max-w-5xl p-4 md:p-8">{props.children}</main>
+
+      <div class="flex flex-1 flex-col md:flex-row">
+        {/* Sidebar Navigation */}
+        <Show when={session.data?.isAuthenticated}>
+          <aside class="w-full shrink-0 border-r border-base-300 bg-base-100 p-4 md:w-64">
+            <SidebarContent role={session.data?.user?.role} />
+          </aside>
+        </Show>
+
+        {/* Main Content */}
+        <main class="mx-auto w-full min-w-0 max-w-7xl flex-1 p-4 md:p-8">
+          {props.children}
+        </main>
       </div>
     </div>
   );
 }
 
 /** Renders children only for an approved, signed-in user; the API enforces the same rule independently. */
-function Protected(props: { children: JSX.Element }) {
+function Protected(props: { children: JSX.Element; adminOnly?: boolean }) {
   const session = useGetSession();
   return (
     <Switch>
@@ -42,7 +54,19 @@ function Protected(props: { children: JSX.Element }) {
           Could not reach the server: {session.error?.message}
         </p>
       </Match>
-      <Match when={session.data?.isAuthenticated}>{props.children}</Match>
+      <Match
+        when={
+          session.data?.isAuthenticated &&
+          (!props.adminOnly || isAdmin(session.data.user?.role))
+        }
+      >
+        {props.children}
+      </Match>
+      <Match when={session.data?.isAuthenticated}>
+        <p class="py-16 text-center text-error" role="alert">
+          You do not have access to this page.
+        </p>
+      </Match>
       <Match when={true}>
         <Navigate href="/login" />
       </Match>
@@ -55,7 +79,7 @@ function NotFound() {
     <div class="py-16 text-center">
       <h1 class="text-2xl font-semibold">Page not found</h1>
       <A href="/demo" class="link link-primary mt-4 inline-block">
-        Back to the demo
+        Back to the home page
       </A>
     </div>
   );
@@ -73,6 +97,38 @@ export default function App() {
           component={() => (
             <Protected>
               <DemoPage />
+            </Protected>
+          )}
+        />
+        <Route
+          path="/sessions"
+          component={() => (
+            <Protected>
+              <AllSessionsPage />
+            </Protected>
+          )}
+        />
+        <Route
+          path="/system"
+          component={() => (
+            <Protected adminOnly>
+              <SystemInfoPage />
+            </Protected>
+          )}
+        />
+        <Route
+          path="/users"
+          component={() => (
+            <Protected adminOnly>
+              <UserAdminPage />
+            </Protected>
+          )}
+        />
+        <Route
+          path="/create"
+          component={() => (
+            <Protected adminOnly>
+              <ImportSessionPage />
             </Protected>
           )}
         />

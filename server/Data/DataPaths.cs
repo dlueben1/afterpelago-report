@@ -34,11 +34,14 @@ public sealed class DataPaths
 
     public string KeysDirectory => Path.Combine(Directory, "keys");
 
+    public string ImportsDirectory => Path.Combine(Directory, "imports");
+
     public string ConnectionString => $"Data Source={DatabasePath}";
 
     public void EnsureCreated()
     {
         System.IO.Directory.CreateDirectory(Directory);
         System.IO.Directory.CreateDirectory(KeysDirectory);
+        System.IO.Directory.CreateDirectory(ImportsDirectory);
     }
 }

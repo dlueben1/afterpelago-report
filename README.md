@@ -2,9 +2,9 @@
 
 Generate post-game reports from Archipelago Randomizer sessions and track stats across your playgroup ("pods").
 
-This repository currently contains the **architecture bootstrap only**: a proof that the Solid/Vite development
+The application now includes the Solid/Vite development
 workflow, the C#→TypeScript contract pipeline, SQLite persistence, Discord sign-in with manual approval, and a
-single-process production deployment all work. There is no Archipelago functionality yet (see [Postponed](#postponed)).
+single-process production deployment, and the core WebLog session importer described below.
 
 ## Prerequisites
 
@@ -24,7 +24,8 @@ server/                     the ONE production project: Afterpelago.csproj (ASP.
   Api/                      minimal-API endpoints + request/response contracts (the source of truth for the TS client)
   Auth/                     Discord + cookie auth, antiforgery, access-record revalidation
   Data/                     EF Core DbContext, data-directory resolution, Migrations/
-  Domain/                   entities (DemoCounter, AccessRecord)
+  Domain/                   entities, including the Session aggregate
+  Services/                 session import and lifecycle processing
 web/                        Solid + Vite + Tailwind + daisyUI SPA (a normal npm project)
   openapi/                  GENERATED OpenAPI contract (committed)
   src/api/generated/        GENERATED TypeScript models + TanStack Solid Query hooks (never edit)
@@ -66,7 +67,8 @@ The default `http` launch profile (used by `dotnet watch`, VS Code and Visual St
 ### Where development data lives
 
 `appsettings.Development.json` sets `Afterpelago:DataDirectory` to `../.data`, resolved from the project folder, i.e.
-**`<repo>/.data/`** (git-ignored): `afterpelago.db` (SQLite) and `keys/` (cookie-protection keys). Delete the folder to reset.
+**`<repo>/.data/`** (git-ignored): `afterpelago.db` (SQLite), `keys/` (cookie-protection keys), and `imports/`
+(original session logs named by import ID). Delete the folder to reset.
 Open the database with any SQLite tool (DB Browser for SQLite, `sqlite3`, the VS Code SQLite extensions).
 
 ## API contract and generated client
@@ -96,7 +98,8 @@ dotnet tool run dotnet-ef database update        # optional; the app also migrat
 ```
 
 The design-time factory (`AfterpelagoDbContextFactory`) needs no Discord settings and does not boot the web host.
-Back up `afterpelago.db` (copy the whole data directory while stopped) before upgrading production.
+Back up the entire data directory while the app is stopped. A complete backup needs `afterpelago.db`, `imports/`,
+and `keys/`; the database alone does not contain the original session logs.
 
 ## Configuration and secrets
 
@@ -189,7 +192,7 @@ not the working directory, so it starts correctly from anywhere (for example as 
 
 ## Postponed (deliberately not built)
 
-Archipelago WebSocket connection / recorder / protocol parsing, live session tracking, Pod and Session domain models,
+Archipelago WebSocket connection / recorder / protocol parsing, live session tracking, Pod models,
 cross-session analytics, SignalR, background workers, DeathLink, game metadata, Docker, cloud/Azure deployment, reverse
 proxy/TLS/DuckDNS setup, Windows Service installation (it will be a thin hosting configuration, `UseWindowsService`,
 on top of the same app), complex roles, an access-request admin UI/CLI (approval is by SQL for now).

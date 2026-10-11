@@ -29,9 +29,19 @@ import {
 
 import type {
   AntiforgeryTokenResponse,
+  CheckResponse,
   CounterResponse,
+  DatabaseInfoResponse,
+  ImportWebLogBody,
+  ProblemDetails,
+  PublishSessionRequest,
   ServerDataResponse,
-  SessionResponse
+  SessionDetailsResponse,
+  SessionImportResponse,
+  SessionResponse,
+  SessionSummaryResponse,
+  UpdateUserApprovalRequest,
+  UserApprovalResponse
 } from './model';
 
 import { apiFetch } from '../transport';
@@ -522,4 +532,837 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(() => getIncrementCounterMutationOptions(options), queryClient);
+    }
+
+export const getGetDatabaseInfoUrl = () => {
+
+
+
+
+  return `/api/admin/db-info`
+}
+
+export const getDatabaseInfo = async ( options?: Parameters<typeof apiFetch>[1]): Promise<DatabaseInfoResponse> => {
+
+  return apiFetch<DatabaseInfoResponse>(getGetDatabaseInfoUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDatabaseInfoQueryKey = () => {
+    return [
+    `/api/admin/db-info`
+    ] as const;
+    }
+
+
+export const getGetDatabaseInfoQueryOptions = <TData = Awaited<ReturnType<typeof getDatabaseInfo>>, TError = ErrorType<unknown>>( options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getDatabaseInfo>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  getGetDatabaseInfoQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDatabaseInfo>>> = ({ signal }) => getDatabaseInfo({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions}
+}
+
+export type GetDatabaseInfoQueryResult = NonNullable<Awaited<ReturnType<typeof getDatabaseInfo>>>
+export type GetDatabaseInfoQueryError = ErrorType<unknown>
+
+
+export function useGetDatabaseInfo<TData = Awaited<ReturnType<typeof getDatabaseInfo>>, TError = ErrorType<unknown>>(
+  options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getDatabaseInfo>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getDatabaseInfo>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDatabaseInfo<TData = Awaited<ReturnType<typeof getDatabaseInfo>>, TError = ErrorType<unknown>>(
+  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getDatabaseInfo>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getDatabaseInfo>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDatabaseInfo<TData = Awaited<ReturnType<typeof getDatabaseInfo>>, TError = ErrorType<unknown>>(
+  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getDatabaseInfo>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetDatabaseInfo<TData = Awaited<ReturnType<typeof getDatabaseInfo>>, TError = ErrorType<unknown>>(
+  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getDatabaseInfo>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+ ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetDatabaseInfoQueryOptions(options)
+
+  const query = useQuery(() => getGetDatabaseInfoQueryOptions(options), queryClient);
+
+  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
+}
+
+
+
+
+
+
+
+export const getImportWebLogUrl = (requestId: string,) => {
+
+
+
+
+  return `/api/sessions/imports/weblog/${requestId}`
+}
+
+export const importWebLog = async (requestId: string,
+    importWebLogBody: ImportWebLogBody, options?: Parameters<typeof apiFetch>[1]): Promise<SessionImportResponse> => {
+    const formData = new FormData();
+if(importWebLogBody.name !== undefined) {
+ formData.append(`name`, importWebLogBody.name);
+ }
+
+if(importWebLogBody.file !== undefined) {
+ formData.append(`file`, importWebLogBody.file);
+ }
+
+  return apiFetch<SessionImportResponse>(getImportWebLogUrl(requestId),
+  {
+    ...options,
+    method: 'PUT'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getImportWebLogMutationKey = () => ['importWebLog'] as const;
+
+export const getImportWebLogMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof importWebLog>>, TError,ImportWebLogMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): MutationOptions<Awaited<ReturnType<typeof importWebLog>>, TError,ImportWebLogMutationVariables, TContext> => {
+
+const mutationKey = getImportWebLogMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importWebLog>>, ImportWebLogMutationVariables> = (props) => {
+          const {requestId,data} = props ?? {};
+
+          return  importWebLog(requestId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportWebLogMutationResult = NonNullable<Awaited<ReturnType<typeof importWebLog>>>
+    export type ImportWebLogMutationBody = ImportWebLogBody
+    export type ImportWebLogMutationError = ErrorType<ProblemDetails>
+    export type ImportWebLogMutationVariables = {requestId: string;data: ImportWebLogBody}
+
+    export const useImportWebLog = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof importWebLog>>, TError,ImportWebLogMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof importWebLog>>,
+        TError,
+        ImportWebLogMutationVariables,
+        TContext
+      > => {
+      return useMutation(() => getImportWebLogMutationOptions(options), queryClient);
+    }
+
+export const getGetSessionImportUrl = (requestId: string,) => {
+
+
+
+
+  return `/api/sessions/imports/${requestId}`
+}
+
+export const getSessionImport = async (requestId: string, options?: Parameters<typeof apiFetch>[1]): Promise<SessionImportResponse> => {
+
+  return apiFetch<SessionImportResponse>(getGetSessionImportUrl(requestId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSessionImportQueryKey = (requestId: string,) => {
+    return [
+    `/api/sessions/imports/${requestId}`
+    ] as const;
+    }
+
+
+export const getGetSessionImportQueryOptions = <TData = Awaited<ReturnType<typeof getSessionImport>>, TError = ErrorType<ProblemDetails>>(requestId: string, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionImport>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  getGetSessionImportQueryKey(requestId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSessionImport>>> = ({ signal }) => getSessionImport(requestId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: requestId !== null && requestId !== undefined, ...queryOptions}
+}
+
+export type GetSessionImportQueryResult = NonNullable<Awaited<ReturnType<typeof getSessionImport>>>
+export type GetSessionImportQueryError = ErrorType<ProblemDetails>
+
+
+export function useGetSessionImport<TData = Awaited<ReturnType<typeof getSessionImport>>, TError = ErrorType<ProblemDetails>>(
+ requestId: string, options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionImport>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getSessionImport>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessionImport<TData = Awaited<ReturnType<typeof getSessionImport>>, TError = ErrorType<ProblemDetails>>(
+ requestId: string, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionImport>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getSessionImport>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessionImport<TData = Awaited<ReturnType<typeof getSessionImport>>, TError = ErrorType<ProblemDetails>>(
+ requestId: string, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionImport>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetSessionImport<TData = Awaited<ReturnType<typeof getSessionImport>>, TError = ErrorType<ProblemDetails>>(
+ requestId: string, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionImport>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+ ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSessionImportQueryOptions(requestId,options)
+
+  const query = useQuery(() => getGetSessionImportQueryOptions(requestId,options), queryClient);
+
+  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
+}
+
+
+
+
+
+
+
+export const getPublishSessionUrl = (id: number,) => {
+
+
+
+
+  return `/api/sessions/${id}/publish`
+}
+
+export const publishSession = async (id: number,
+    publishSessionRequest: PublishSessionRequest, options?: Parameters<typeof apiFetch>[1]): Promise<SessionSummaryResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<SessionSummaryResponse>(getPublishSessionUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(publishSessionRequest)
+  }
+);}
+
+
+
+
+
+export const getPublishSessionMutationKey = () => ['publishSession'] as const;
+
+export const getPublishSessionMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof publishSession>>, TError,PublishSessionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): MutationOptions<Awaited<ReturnType<typeof publishSession>>, TError,PublishSessionMutationVariables, TContext> => {
+
+const mutationKey = getPublishSessionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof publishSession>>, PublishSessionMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  publishSession(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PublishSessionMutationResult = NonNullable<Awaited<ReturnType<typeof publishSession>>>
+    export type PublishSessionMutationBody = PublishSessionRequest
+    export type PublishSessionMutationError = ErrorType<ProblemDetails>
+    export type PublishSessionMutationVariables = {id: number;data: PublishSessionRequest}
+
+    export const usePublishSession = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof publishSession>>, TError,PublishSessionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof publishSession>>,
+        TError,
+        PublishSessionMutationVariables,
+        TContext
+      > => {
+      return useMutation(() => getPublishSessionMutationOptions(options), queryClient);
+    }
+
+export const getDeleteSessionUrl = (id: number,) => {
+
+
+
+
+  return `/api/sessions/${id}`
+}
+
+export const deleteSession = async (id: number, options?: Parameters<typeof apiFetch>[1]): Promise<void> => {
+
+  return apiFetch<void>(getDeleteSessionUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteSessionMutationKey = () => ['deleteSession'] as const;
+
+export const getDeleteSessionMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof deleteSession>>, TError,DeleteSessionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): MutationOptions<Awaited<ReturnType<typeof deleteSession>>, TError,DeleteSessionMutationVariables, TContext> => {
+
+const mutationKey = getDeleteSessionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSession>>, DeleteSessionMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteSession(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteSessionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSession>>>
+
+    export type DeleteSessionMutationError = ErrorType<ProblemDetails>
+    export type DeleteSessionMutationVariables = {id: number}
+
+    export const useDeleteSession = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof deleteSession>>, TError,DeleteSessionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteSession>>,
+        TError,
+        DeleteSessionMutationVariables,
+        TContext
+      > => {
+      return useMutation(() => getDeleteSessionMutationOptions(options), queryClient);
+    }
+
+export const getGetSessionDetailsUrl = (id: number,) => {
+
+
+
+
+  return `/api/sessions/${id}`
+}
+
+export const getSessionDetails = async (id: number, options?: Parameters<typeof apiFetch>[1]): Promise<SessionDetailsResponse> => {
+
+  return apiFetch<SessionDetailsResponse>(getGetSessionDetailsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSessionDetailsQueryKey = (id: number,) => {
+    return [
+    `/api/sessions/${id}`
+    ] as const;
+    }
+
+
+export const getGetSessionDetailsQueryOptions = <TData = Awaited<ReturnType<typeof getSessionDetails>>, TError = ErrorType<void>>(id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionDetails>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  getGetSessionDetailsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSessionDetails>>> = ({ signal }) => getSessionDetails(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions}
+}
+
+export type GetSessionDetailsQueryResult = NonNullable<Awaited<ReturnType<typeof getSessionDetails>>>
+export type GetSessionDetailsQueryError = ErrorType<void>
+
+
+export function useGetSessionDetails<TData = Awaited<ReturnType<typeof getSessionDetails>>, TError = ErrorType<void>>(
+ id: number, options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionDetails>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getSessionDetails>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessionDetails<TData = Awaited<ReturnType<typeof getSessionDetails>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionDetails>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getSessionDetails>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessionDetails<TData = Awaited<ReturnType<typeof getSessionDetails>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionDetails>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetSessionDetails<TData = Awaited<ReturnType<typeof getSessionDetails>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionDetails>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+ ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSessionDetailsQueryOptions(id,options)
+
+  const query = useQuery(() => getGetSessionDetailsQueryOptions(id,options), queryClient);
+
+  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
+}
+
+
+
+
+
+
+
+export const getGetSessionsUrl = () => {
+
+
+
+
+  return `/api/sessions`
+}
+
+export const getSessions = async ( options?: Parameters<typeof apiFetch>[1]): Promise<SessionSummaryResponse[]> => {
+
+  return apiFetch<SessionSummaryResponse[]>(getGetSessionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSessionsQueryKey = () => {
+    return [
+    `/api/sessions`
+    ] as const;
+    }
+
+
+export const getGetSessionsQueryOptions = <TData = Awaited<ReturnType<typeof getSessions>>, TError = ErrorType<unknown>>( options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessions>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  getGetSessionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSessions>>> = ({ signal }) => getSessions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions}
+}
+
+export type GetSessionsQueryResult = NonNullable<Awaited<ReturnType<typeof getSessions>>>
+export type GetSessionsQueryError = ErrorType<unknown>
+
+
+export function useGetSessions<TData = Awaited<ReturnType<typeof getSessions>>, TError = ErrorType<unknown>>(
+  options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessions>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getSessions>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessions<TData = Awaited<ReturnType<typeof getSessions>>, TError = ErrorType<unknown>>(
+  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessions>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getSessions>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessions<TData = Awaited<ReturnType<typeof getSessions>>, TError = ErrorType<unknown>>(
+  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessions>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetSessions<TData = Awaited<ReturnType<typeof getSessions>>, TError = ErrorType<unknown>>(
+  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessions>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+ ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSessionsQueryOptions(options)
+
+  const query = useQuery(() => getGetSessionsQueryOptions(options), queryClient);
+
+  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
+}
+
+
+
+
+
+
+
+export const getGetSessionChecksUrl = (id: number,) => {
+
+
+
+
+  return `/api/sessions/${id}/checks`
+}
+
+export const getSessionChecks = async (id: number, options?: Parameters<typeof apiFetch>[1]): Promise<CheckResponse[]> => {
+
+  return apiFetch<CheckResponse[]>(getGetSessionChecksUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSessionChecksQueryKey = (id: number,) => {
+    return [
+    `/api/sessions/${id}/checks`
+    ] as const;
+    }
+
+
+export const getGetSessionChecksQueryOptions = <TData = Awaited<ReturnType<typeof getSessionChecks>>, TError = ErrorType<void>>(id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionChecks>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  getGetSessionChecksQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSessionChecks>>> = ({ signal }) => getSessionChecks(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions}
+}
+
+export type GetSessionChecksQueryResult = NonNullable<Awaited<ReturnType<typeof getSessionChecks>>>
+export type GetSessionChecksQueryError = ErrorType<void>
+
+
+export function useGetSessionChecks<TData = Awaited<ReturnType<typeof getSessionChecks>>, TError = ErrorType<void>>(
+ id: number, options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionChecks>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getSessionChecks>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessionChecks<TData = Awaited<ReturnType<typeof getSessionChecks>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionChecks>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getSessionChecks>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessionChecks<TData = Awaited<ReturnType<typeof getSessionChecks>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionChecks>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetSessionChecks<TData = Awaited<ReturnType<typeof getSessionChecks>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionChecks>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+ ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSessionChecksQueryOptions(id,options)
+
+  const query = useQuery(() => getGetSessionChecksQueryOptions(id,options), queryClient);
+
+  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
+}
+
+
+
+
+
+
+
+export const getGetUserApprovalsUrl = () => {
+
+
+
+
+  return `/api/users/user-approvals`
+}
+
+export const getUserApprovals = async ( options?: Parameters<typeof apiFetch>[1]): Promise<UserApprovalResponse[]> => {
+
+  return apiFetch<UserApprovalResponse[]>(getGetUserApprovalsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUserApprovalsQueryKey = () => {
+    return [
+    `/api/users/user-approvals`
+    ] as const;
+    }
+
+
+export const getGetUserApprovalsQueryOptions = <TData = Awaited<ReturnType<typeof getUserApprovals>>, TError = ErrorType<unknown>>( options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getUserApprovals>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  getGetUserApprovalsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserApprovals>>> = ({ signal }) => getUserApprovals({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions}
+}
+
+export type GetUserApprovalsQueryResult = NonNullable<Awaited<ReturnType<typeof getUserApprovals>>>
+export type GetUserApprovalsQueryError = ErrorType<unknown>
+
+
+export function useGetUserApprovals<TData = Awaited<ReturnType<typeof getUserApprovals>>, TError = ErrorType<unknown>>(
+  options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getUserApprovals>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getUserApprovals>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserApprovals<TData = Awaited<ReturnType<typeof getUserApprovals>>, TError = ErrorType<unknown>>(
+  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getUserApprovals>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getUserApprovals>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserApprovals<TData = Awaited<ReturnType<typeof getUserApprovals>>, TError = ErrorType<unknown>>(
+  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getUserApprovals>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetUserApprovals<TData = Awaited<ReturnType<typeof getUserApprovals>>, TError = ErrorType<unknown>>(
+  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getUserApprovals>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+ ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetUserApprovalsQueryOptions(options)
+
+  const query = useQuery(() => getGetUserApprovalsQueryOptions(options), queryClient);
+
+  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
+}
+
+
+
+
+
+
+
+export const getUpdateUserApprovalUrl = (discordUserId: string,) => {
+
+
+
+
+  return `/api/users/user-approvals/${discordUserId}`
+}
+
+export const updateUserApproval = async (discordUserId: string,
+    updateUserApprovalRequest: UpdateUserApprovalRequest, options?: Parameters<typeof apiFetch>[1]): Promise<UserApprovalResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<UserApprovalResponse>(getUpdateUserApprovalUrl(discordUserId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateUserApprovalRequest)
+  }
+);}
+
+
+
+
+
+export const getUpdateUserApprovalMutationKey = () => ['updateUserApproval'] as const;
+
+export const getUpdateUserApprovalMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof updateUserApproval>>, TError,UpdateUserApprovalMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): MutationOptions<Awaited<ReturnType<typeof updateUserApproval>>, TError,UpdateUserApprovalMutationVariables, TContext> => {
+
+const mutationKey = getUpdateUserApprovalMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateUserApproval>>, UpdateUserApprovalMutationVariables> = (props) => {
+          const {discordUserId,data} = props ?? {};
+
+          return  updateUserApproval(discordUserId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateUserApprovalMutationResult = NonNullable<Awaited<ReturnType<typeof updateUserApproval>>>
+    export type UpdateUserApprovalMutationBody = UpdateUserApprovalRequest
+    export type UpdateUserApprovalMutationError = ErrorType<ProblemDetails>
+    export type UpdateUserApprovalMutationVariables = {discordUserId: string;data: UpdateUserApprovalRequest}
+
+    export const useUpdateUserApproval = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof updateUserApproval>>, TError,UpdateUserApprovalMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateUserApproval>>,
+        TError,
+        UpdateUserApprovalMutationVariables,
+        TContext
+      > => {
+      return useMutation(() => getUpdateUserApprovalMutationOptions(options), queryClient);
     }

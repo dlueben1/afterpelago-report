@@ -11,6 +11,8 @@ namespace Afterpelago.Auth;
 
 public static class AuthSetup
 {
+    public const string AdminOnlyPolicy = "AdminOnly";
+
     public static void AddAfterpelagoAuth(this WebApplicationBuilder builder, bool isContractGeneration = false)
     {
         var services = builder.Services;
@@ -97,7 +99,8 @@ public static class AuthSetup
             });
         }
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+            options.AddPolicy(AdminOnlyPolicy, policy => policy.RequireRole("Admin")));
 
         services.AddAntiforgery(options =>
         {

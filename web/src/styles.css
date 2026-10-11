@@ -54,7 +54,7 @@
 }
 
 /* Afterpelago visual palette — not all colors are semantic UI states */
-@theme {
+@theme static {
   --font-sans: "Nunito Sans Variable", sans-serif;
   --font-display: "M PLUS Rounded 1c", sans-serif;
 
