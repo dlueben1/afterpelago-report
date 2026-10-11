@@ -19,13 +19,15 @@ public sealed record SessionSummaryResponse(
 public sealed record ConnectionResponse(
     long Id, DateTimeOffset TimestampUtc, string Action, string Kind, string? ClientVersion, IReadOnlyList<string> Tags);
 public sealed record SessionSlotResponse(
-    int Id, int TeamNumber, string PlayerName, string? GameName, bool GoalCompleted, IReadOnlyList<ConnectionResponse> Connections);
+    int Id, int TeamNumber, string PlayerName, string? GameName, bool GoalCompleted, IReadOnlyList<ConnectionResponse> Connections,
+    string? CoverUrl);
 public sealed record SessionImportInfoResponse(
     int Id, DateTimeOffset ImportedAt, string Method, string OriginalFileName, long ByteLength, string Sha256, int WarningCount);
 public sealed record SessionDetailsResponse(
     int Id, string Name, DateTimeOffset StartUtc, DateTimeOffset EndUtc,
     IReadOnlyList<SessionSlotResponse> Slots, IReadOnlyList<SessionImportInfoResponse> Imports, string Status, bool IsFavorite,
-    int CheckCount, int HintCount, long? TotalPlaytimeSeconds);
+    int CheckCount, int HintCount, long? TotalPlaytimeSeconds, int SourceUtcOffsetMinutes);
 public sealed record CheckResponse(
     long Id, DateTimeOffset TimestampUtc, int TeamNumber, int SenderSlotId, string SenderName,
-    int ReceiverSlotId, string ReceiverName, string ItemName, string LocationName, int SourceLineNumber);
+    int ReceiverSlotId, string ReceiverName, string ItemName, string LocationName, int SourceLineNumber, string? ImageUrl);
+public sealed record DailyCheckCountResponse(DateOnly Date, int Count);

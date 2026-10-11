@@ -19,9 +19,16 @@ public sealed class AfterpelagoDbContext(DbContextOptions<AfterpelagoDbContext> 
     public DbSet<SlotConnectionEvent> SlotConnectionEvents => Set<SlotConnectionEvent>();
     public DbSet<Check> Checks => Set<Check>();
     public DbSet<Hint> Hints => Set<Hint>();
+    public DbSet<Game> Games => Set<Game>();
+    public DbSet<GameItem> GameItems => Set<GameItem>();
+    public DbSet<GameImageAsset> GameImageAssets => Set<GameImageAsset>();
+    public DbSet<GameImageCandidate> GameImageCandidates => Set<GameImageCandidate>();
+    public DbSet<GameItemImage> GameItemImages => Set<GameItemImage>();
+    public DbSet<GameScrape> GameScrapes => Set<GameScrape>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        GameDataModel.Configure(modelBuilder);
         modelBuilder.Entity<AccessRecord>(entity =>
         {
             entity.HasKey(a => a.DiscordUserId);

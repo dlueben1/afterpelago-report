@@ -26,4 +26,6 @@ export interface SessionDetailsResponse {
      * @pattern ^-?(?:0|[1-9]\d*)$
      */
   totalPlaytimeSeconds: number | string | null;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  sourceUtcOffsetMinutes: number | string;
 }

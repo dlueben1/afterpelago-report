@@ -12,9 +12,11 @@ import SidebarContent from "./components/nav/SidebarContent";
 import { isAdmin } from "./lib/auth";
 import AllSessionsPage from "./pages/session/AllSessionsPage";
 import SessionDetailsPage from "./pages/session/SessionDetailsPage";
+import TimelinePage from "./pages/session/TimelinePage";
 import SystemInfoPage from "./pages/admin/SystemInfoPage";
 import ImportSessionPage from "./pages/admin/ImportSessionPage";
 import UserAdminPage from "./pages/admin/UserAdminPage";
+import GameScraperPage from "./pages/admin/GameScraperPage";
 
 function Layout(props: ParentProps) {
   const session = useGetSession();
@@ -118,6 +120,14 @@ export default function App() {
           )}
         />
         <Route
+          path="/sessions/:id/timeline"
+          component={() => (
+            <Protected>
+              <TimelinePage />
+            </Protected>
+          )}
+        />
+        <Route
           path="/system"
           component={() => (
             <Protected adminOnly>
@@ -142,6 +152,14 @@ export default function App() {
           )}
         />
         <Route path="*" component={NotFound} />
+        <Route
+          path="/game-scraper"
+          component={() => (
+            <Protected adminOnly>
+              <GameScraperPage />
+            </Protected>
+          )}
+        />
       </Router>
     </QueryClientProvider>
   );

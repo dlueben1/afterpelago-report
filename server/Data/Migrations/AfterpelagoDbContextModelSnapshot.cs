@@ -85,6 +85,237 @@ namespace Afterpelago.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Afterpelago.Domain.Game", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CoverHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("CoverHeight")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CoverWidth")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT")
+                        .UseCollation("BINARY");
+
+                    b.Property<int>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Games");
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.GameImageAsset", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("ByteLength")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("GameId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameId", "Hash")
+                        .IsUnique();
+
+                    b.ToTable("GameImageAssets");
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.GameImageCandidate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ApIdsJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("AssetId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AutomaticEligible")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CodesJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("GameId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("ImportId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ItemName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Modifiers")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PackUid")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PackVersion")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceFile")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceKey")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Stage")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Variant")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssetId");
+
+                    b.HasIndex("ImportId");
+
+                    b.HasIndex("GameId", "SourceKey")
+                        .IsUnique();
+
+                    b.ToTable("GameImageCandidates");
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.GameItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("GameId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .UseCollation("BINARY");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("GameItems");
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.GameItemImage", b =>
+                {
+                    b.Property<int>("GameItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CandidateId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Origin")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("GameItemId");
+
+                    b.HasIndex("CandidateId");
+
+                    b.ToTable("GameItemImages");
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.GameScrape", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CommitResponseJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ExpectedRevision")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("GameId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ManifestJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ResultsJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("GameId");
+
+                    b.ToTable("GameScrapes");
+                });
+
             modelBuilder.Entity("Afterpelago.Domain.Sessions.Check", b =>
                 {
                     b.Property<long>("Id")
@@ -345,6 +576,9 @@ namespace Afterpelago.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("GameId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("GameName")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
@@ -365,6 +599,8 @@ namespace Afterpelago.Data.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GameId");
 
                     b.HasIndex("SessionId", "TeamNumber", "PlayerName")
                         .IsUnique();
@@ -413,6 +649,72 @@ namespace Afterpelago.Data.Migrations
                     b.HasIndex("SlotId");
 
                     b.ToTable("SlotConnectionEvents");
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.GameImageAsset", b =>
+                {
+                    b.HasOne("Afterpelago.Domain.Game", null)
+                        .WithMany()
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.GameImageCandidate", b =>
+                {
+                    b.HasOne("Afterpelago.Domain.GameImageAsset", "Asset")
+                        .WithMany()
+                        .HasForeignKey("AssetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Afterpelago.Domain.Game", null)
+                        .WithMany()
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Afterpelago.Domain.GameScrape", null)
+                        .WithMany()
+                        .HasForeignKey("ImportId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Asset");
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.GameItem", b =>
+                {
+                    b.HasOne("Afterpelago.Domain.Game", null)
+                        .WithMany()
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.GameItemImage", b =>
+                {
+                    b.HasOne("Afterpelago.Domain.GameImageCandidate", "Candidate")
+                        .WithMany()
+                        .HasForeignKey("CandidateId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Afterpelago.Domain.GameItem", "GameItem")
+                        .WithOne("Image")
+                        .HasForeignKey("Afterpelago.Domain.GameItemImage", "GameItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Candidate");
+
+                    b.Navigation("GameItem");
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.GameScrape", b =>
+                {
+                    b.HasOne("Afterpelago.Domain.Game", null)
+                        .WithMany()
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Afterpelago.Domain.Sessions.Check", b =>
@@ -543,11 +845,18 @@ namespace Afterpelago.Data.Migrations
 
             modelBuilder.Entity("Afterpelago.Domain.Sessions.Slot", b =>
                 {
+                    b.HasOne("Afterpelago.Domain.Game", "Game")
+                        .WithMany()
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Afterpelago.Domain.Sessions.Session", "Session")
                         .WithMany("Slots")
                         .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Game");
 
                     b.Navigation("Session");
                 });
@@ -577,6 +886,11 @@ namespace Afterpelago.Data.Migrations
                     b.Navigation("Session");
 
                     b.Navigation("Slot");
+                });
+
+            modelBuilder.Entity("Afterpelago.Domain.GameItem", b =>
+                {
+                    b.Navigation("Image");
                 });
 
             modelBuilder.Entity("Afterpelago.Domain.Sessions.Session", b =>

@@ -67,8 +67,8 @@ The default `http` launch profile (used by `dotnet watch`, VS Code and Visual St
 ### Where development data lives
 
 `appsettings.Development.json` sets `Afterpelago:DataDirectory` to `../.data`, resolved from the project folder, i.e.
-**`<repo>/.data/`** (git-ignored): `afterpelago.db` (SQLite), `keys/` (cookie-protection keys), and `imports/`
-(original session logs named by import ID). Delete the folder to reset.
+**`<repo>/.data/`** (git-ignored): `afterpelago.db` (SQLite), `keys/` (cookie-protection keys), `imports/`
+(original session logs named by import ID), and `games/` (scraped item images). Delete the folder to reset.
 Open the database with any SQLite tool (DB Browser for SQLite, `sqlite3`, the VS Code SQLite extensions).
 
 ## API contract and generated client
@@ -99,7 +99,7 @@ dotnet tool run dotnet-ef database update        # optional; the app also migrat
 
 The design-time factory (`AfterpelagoDbContextFactory`) needs no Discord settings and does not boot the web host.
 Back up the entire data directory while the app is stopped. A complete backup needs `afterpelago.db`, `imports/`,
-and `keys/`; the database alone does not contain the original session logs.
+`keys/`, and `games/`; the database alone does not contain the original session logs or item images.
 
 ## Configuration and secrets
 
@@ -190,9 +190,49 @@ ASP.NET serves `/api/*`, the compiled static assets, and the SPA shell for exten
 deep links work). Unknown `/api/*` paths and missing files are real 404s. The content root is the application folder,
 not the working directory, so it starts correctly from anywhere (for example as a service).
 
+## Game Scraper
+
+Administrators can open **Game Scraper** in the sidebar (`/game-scraper`). Upload a PopTracker ZIP,
+select its imported game, click **Scrape**, review image proposals, and click **Save**. Uploads are validated
+before Scrape is enabled. The review URL includes the draft ID and can be reopened for seven days; unsaved
+manual edits are local to the page. Selecting a game also opens its saved mappings without another upload.
+
+Games receive stable IDs from session imports. Existing slots and receiver-side check/hint item names are
+backfilled by migration. Deleting a session does not delete its game catalog or images. Administrators can
+add exact canonical item names before those names appear in a log. Item names are case-sensitive identities;
+only unique image suggestions tolerate case and whitespace differences. The Wind Waker pack's longer
+manifest title is an explicit alias of the imported game name `The Wind Waker`.
+
+The scraper reads item-shaped JSON (including comments/trailing commas), literal `Tracker:AddItems` paths,
+and literal decimal/hexadecimal Lua item maps. It never executes Lua or downloads URLs from a pack.
+Settings/static/internal definitions and modifier-bearing images are manual-only candidates. Progressive
+stages remain selectable. Missing/corrupt images produce warnings; packs with no usable icons cannot be saved.
+Lua-generated items and rendered image modifiers are not emulated. AP IDs are retained as provenance, not
+guessed into log item names. Exact/unique name matches fill gaps; repeat uploads preserve every existing
+assignment, including manual **No image** choices. Review conflicts return 409 and require reloading.
+
+Icons are decoded with SkiaSharp and stored as lossless WebP with their original dimensions/transparency;
+animated images use their first frame. Runtime packages include Windows and Linux native assets. Saved files
+live at `<DataDirectory>/games/{gameId}/{sha256}.webp`. SQLite stores the mapping and provenance, not image
+bytes. Staged files live under `games/.staging/{draftId}` and are removed on successful commit or after seven
+days at startup/subsequent uploads. Back up `games/` together with the database while the app is stopped.
+
+Approved users can read `GET /api/games`, `GET /api/games/{id}/items` and the image URLs returned by those APIs.
+Images use authenticated, same-origin `/api/games/{id}/images/{hash}.webp` responses with ETags and private
+revalidation. Draft preview and mutation endpoints are admin-only; writes use the normal CSRF header.
+The existing Vite `/api` proxy also handles images. Session item displays do not use these images yet.
+
+Limits: 50 MiB per ZIP, 250 MiB expanded/read budget, 10,000 entries, 16 MiB per processed entry, 16 megapixels
+per image, 20,000 candidates, and two minutes per processing request. ZIP paths, links, encryption, duplicate
+paths and expanded sizes are checked. One game-data write/processing operation runs at a time per process;
+competing operations receive 503 with `Retry-After`. Session-log upload limits are unchanged.
+
+Validation uses builds, type checking, generated API contract checks, code inspection and manual/API
+verification with real packs. Do not add tests, fixtures, test scripts or testing dependencies.
+
 ## Postponed (deliberately not built)
 
 Archipelago WebSocket connection / recorder / protocol parsing, live session tracking, Pod models,
-cross-session analytics, SignalR, background workers, DeathLink, game metadata, Docker, cloud/Azure deployment, reverse
+cross-session analytics, SignalR, background workers, DeathLink, session item-image display, Docker, cloud/Azure deployment, reverse
 proxy/TLS/DuckDNS setup, Windows Service installation (it will be a thin hosting configuration, `UseWindowsService`,
 on top of the same app), complex roles, an access-request admin UI/CLI (approval is by SQL for now).

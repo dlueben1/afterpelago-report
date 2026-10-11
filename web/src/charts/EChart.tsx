@@ -1,16 +1,35 @@
-import { BarChart } from "echarts/charts";
-import { GridComponent, TooltipComponent } from "echarts/components";
+import { BarChart, LineChart } from "echarts/charts";
+import {
+  BrushComponent,
+  DataZoomComponent,
+  DataZoomInsideComponent,
+  GridComponent,
+  ToolboxComponent,
+  TooltipComponent,
+} from "echarts/components";
 import * as echarts from "echarts/core";
 import type { EChartsCoreOption } from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
 import { createEffect, onCleanup, onMount } from "solid-js";
 
-echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
+echarts.use([
+  BarChart,
+  LineChart,
+  BrushComponent,
+  DataZoomComponent,
+  DataZoomInsideComponent,
+  GridComponent,
+  ToolboxComponent,
+  TooltipComponent,
+  CanvasRenderer,
+]);
 
 interface EChartProps {
   option: EChartsCoreOption;
   class?: string;
   label: string;
+  /** ECharts event handlers, e.g. { click: (params) => ... }. Bound on mount. */
+  onEvents?: Record<string, (params: unknown) => void>;
 }
 
 /** Thin ECharts host: canvas renderer, reactive option updates, resize tracking and disposal. */
@@ -20,6 +39,11 @@ export function EChart(props: EChartProps) {
 
   onMount(() => {
     chart = echarts.init(host, undefined, { renderer: "canvas" });
+    if (props.onEvents) {
+      for (const [event, handler] of Object.entries(props.onEvents)) {
+        chart.on(event, handler);
+      }
+    }
     const observer = new ResizeObserver(() => chart?.resize());
     observer.observe(host);
 

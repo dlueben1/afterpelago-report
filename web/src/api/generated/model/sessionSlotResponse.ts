@@ -16,4 +16,6 @@ export interface SessionSlotResponse {
   gameName: string | null;
   goalCompleted: boolean;
   connections: ConnectionResponse[];
+  /** @nullable */
+  coverUrl: string | null;
 }

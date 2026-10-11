@@ -35,6 +35,8 @@ public sealed class DataPaths
     public string KeysDirectory => Path.Combine(Directory, "keys");
 
     public string ImportsDirectory => Path.Combine(Directory, "imports");
+    public string GamesDirectory => Path.Combine(Directory, "games");
+    public string GameStagingDirectory => Path.Combine(GamesDirectory, ".staging");
 
     public string ConnectionString => $"Data Source={DatabasePath}";
 
@@ -43,5 +45,6 @@ public sealed class DataPaths
         System.IO.Directory.CreateDirectory(Directory);
         System.IO.Directory.CreateDirectory(KeysDirectory);
         System.IO.Directory.CreateDirectory(ImportsDirectory);
+        System.IO.Directory.CreateDirectory(GameStagingDirectory);
     }
 }

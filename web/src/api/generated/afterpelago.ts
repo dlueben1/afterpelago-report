@@ -31,10 +31,18 @@ import type {
   AntiforgeryTokenResponse,
   CheckResponse,
   CounterResponse,
+  CustomGameImageResponse,
+  DailyCheckCountResponse,
   DatabaseInfoResponse,
+  GameItemResponse,
+  GameMappingsResponse,
+  GameResponse,
+  GameScrapeResponse,
   ImportWebLogBody,
   ProblemDetails,
   PublishSessionRequest,
+  SaveGameMappingsRequest,
+  ScrapeGameRequest,
   ServerDataResponse,
   SessionDetailsResponse,
   SessionFavoriteResponse,
@@ -43,6 +51,9 @@ import type {
   SessionSummaryResponse,
   SetSessionFavoriteRequest,
   UpdateUserApprovalRequest,
+  UploadCustomGameImageBody,
+  UploadGameCoverBody,
+  UploadGamePackBody,
   UserApprovalResponse
 } from './model';
 
@@ -1282,6 +1293,93 @@ export function useGetSessionChecks<TData = Awaited<ReturnType<typeof getSession
 
 
 
+export const getGetSessionChecksDailyUrl = (id: number,) => {
+
+
+
+
+  return `/api/sessions/${id}/checks/daily`
+}
+
+export const getSessionChecksDaily = async (id: number, options?: Parameters<typeof apiFetch>[1]): Promise<DailyCheckCountResponse[]> => {
+
+  return apiFetch<DailyCheckCountResponse[]>(getGetSessionChecksDailyUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSessionChecksDailyQueryKey = (id: number,) => {
+    return [
+    `/api/sessions/${id}/checks/daily`
+    ] as const;
+    }
+
+
+export const getGetSessionChecksDailyQueryOptions = <TData = Awaited<ReturnType<typeof getSessionChecksDaily>>, TError = ErrorType<void>>(id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionChecksDaily>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  getGetSessionChecksDailyQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSessionChecksDaily>>> = ({ signal }) => getSessionChecksDaily(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions}
+}
+
+export type GetSessionChecksDailyQueryResult = NonNullable<Awaited<ReturnType<typeof getSessionChecksDaily>>>
+export type GetSessionChecksDailyQueryError = ErrorType<void>
+
+
+export function useGetSessionChecksDaily<TData = Awaited<ReturnType<typeof getSessionChecksDaily>>, TError = ErrorType<void>>(
+ id: number, options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionChecksDaily>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getSessionChecksDaily>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessionChecksDaily<TData = Awaited<ReturnType<typeof getSessionChecksDaily>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionChecksDaily>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getSessionChecksDaily>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessionChecksDaily<TData = Awaited<ReturnType<typeof getSessionChecksDaily>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionChecksDaily>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetSessionChecksDaily<TData = Awaited<ReturnType<typeof getSessionChecksDaily>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getSessionChecksDaily>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+ ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSessionChecksDailyQueryOptions(id,options)
+
+  const query = useQuery(() => getGetSessionChecksDailyQueryOptions(id,options), queryClient);
+
+  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
+}
+
+
+
+
+
+
+
 export const getGetUserApprovalsUrl = () => {
 
 
@@ -1450,4 +1548,813 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(() => getUpdateUserApprovalMutationOptions(options), queryClient);
+    }
+
+export const getGetGamesUrl = () => {
+
+
+
+
+  return `/api/games`
+}
+
+export const getGames = async ( options?: Parameters<typeof apiFetch>[1]): Promise<GameResponse[]> => {
+
+  return apiFetch<GameResponse[]>(getGetGamesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGamesQueryKey = () => {
+    return [
+    `/api/games`
+    ] as const;
+    }
+
+
+export const getGetGamesQueryOptions = <TData = Awaited<ReturnType<typeof getGames>>, TError = ErrorType<unknown>>( options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGames>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  getGetGamesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGames>>> = ({ signal }) => getGames({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions}
+}
+
+export type GetGamesQueryResult = NonNullable<Awaited<ReturnType<typeof getGames>>>
+export type GetGamesQueryError = ErrorType<unknown>
+
+
+export function useGetGames<TData = Awaited<ReturnType<typeof getGames>>, TError = ErrorType<unknown>>(
+  options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGames>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getGames>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGames<TData = Awaited<ReturnType<typeof getGames>>, TError = ErrorType<unknown>>(
+  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGames>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getGames>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGames<TData = Awaited<ReturnType<typeof getGames>>, TError = ErrorType<unknown>>(
+  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGames>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetGames<TData = Awaited<ReturnType<typeof getGames>>, TError = ErrorType<unknown>>(
+  options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGames>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+ ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetGamesQueryOptions(options)
+
+  const query = useQuery(() => getGetGamesQueryOptions(options), queryClient);
+
+  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
+}
+
+
+
+
+
+
+
+export const getGetGameItemsUrl = (gameId: number,) => {
+
+
+
+
+  return `/api/games/${gameId}/items`
+}
+
+export const getGameItems = async (gameId: number, options?: Parameters<typeof apiFetch>[1]): Promise<GameItemResponse[]> => {
+
+  return apiFetch<GameItemResponse[]>(getGetGameItemsUrl(gameId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGameItemsQueryKey = (gameId: number,) => {
+    return [
+    `/api/games/${gameId}/items`
+    ] as const;
+    }
+
+
+export const getGetGameItemsQueryOptions = <TData = Awaited<ReturnType<typeof getGameItems>>, TError = ErrorType<ProblemDetails>>(gameId: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGameItems>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  getGetGameItemsQueryKey(gameId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGameItems>>> = ({ signal }) => getGameItems(gameId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: gameId !== null && gameId !== undefined, ...queryOptions}
+}
+
+export type GetGameItemsQueryResult = NonNullable<Awaited<ReturnType<typeof getGameItems>>>
+export type GetGameItemsQueryError = ErrorType<ProblemDetails>
+
+
+export function useGetGameItems<TData = Awaited<ReturnType<typeof getGameItems>>, TError = ErrorType<ProblemDetails>>(
+ gameId: number, options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGameItems>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getGameItems>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGameItems<TData = Awaited<ReturnType<typeof getGameItems>>, TError = ErrorType<ProblemDetails>>(
+ gameId: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGameItems>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getGameItems>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGameItems<TData = Awaited<ReturnType<typeof getGameItems>>, TError = ErrorType<ProblemDetails>>(
+ gameId: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGameItems>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetGameItems<TData = Awaited<ReturnType<typeof getGameItems>>, TError = ErrorType<ProblemDetails>>(
+ gameId: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGameItems>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+ ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetGameItemsQueryOptions(gameId,options)
+
+  const query = useQuery(() => getGetGameItemsQueryOptions(gameId,options), queryClient);
+
+  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
+}
+
+
+
+
+
+
+
+export const getUploadGamePackUrl = () => {
+
+
+
+
+  return `/api/admin/game-scrapes`
+}
+
+export const uploadGamePack = async (uploadGamePackBody: UploadGamePackBody, options?: Parameters<typeof apiFetch>[1]): Promise<GameScrapeResponse> => {
+    const formData = new FormData();
+formData.append(`file`, uploadGamePackBody.file);
+
+  return apiFetch<GameScrapeResponse>(getUploadGamePackUrl(),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getUploadGamePackMutationKey = () => ['uploadGamePack'] as const;
+
+export const getUploadGamePackMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof uploadGamePack>>, TError,UploadGamePackMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): MutationOptions<Awaited<ReturnType<typeof uploadGamePack>>, TError,UploadGamePackMutationVariables, TContext> => {
+
+const mutationKey = getUploadGamePackMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadGamePack>>, UploadGamePackMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  uploadGamePack(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadGamePackMutationResult = NonNullable<Awaited<ReturnType<typeof uploadGamePack>>>
+    export type UploadGamePackMutationBody = UploadGamePackBody
+    export type UploadGamePackMutationError = ErrorType<ProblemDetails>
+    export type UploadGamePackMutationVariables = {data: UploadGamePackBody}
+
+    export const useUploadGamePack = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof uploadGamePack>>, TError,UploadGamePackMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof uploadGamePack>>,
+        TError,
+        UploadGamePackMutationVariables,
+        TContext
+      > => {
+      return useMutation(() => getUploadGamePackMutationOptions(options), queryClient);
+    }
+
+export const getScrapeGamePackUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/game-scrapes/${id}/scrape`
+}
+
+export const scrapeGamePack = async (id: string,
+    scrapeGameRequest: ScrapeGameRequest, options?: Parameters<typeof apiFetch>[1]): Promise<GameScrapeResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<GameScrapeResponse>(getScrapeGamePackUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(scrapeGameRequest)
+  }
+);}
+
+
+
+
+
+export const getScrapeGamePackMutationKey = () => ['scrapeGamePack'] as const;
+
+export const getScrapeGamePackMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof scrapeGamePack>>, TError,ScrapeGamePackMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): MutationOptions<Awaited<ReturnType<typeof scrapeGamePack>>, TError,ScrapeGamePackMutationVariables, TContext> => {
+
+const mutationKey = getScrapeGamePackMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof scrapeGamePack>>, ScrapeGamePackMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  scrapeGamePack(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ScrapeGamePackMutationResult = NonNullable<Awaited<ReturnType<typeof scrapeGamePack>>>
+    export type ScrapeGamePackMutationBody = ScrapeGameRequest
+    export type ScrapeGamePackMutationError = ErrorType<ProblemDetails>
+    export type ScrapeGamePackMutationVariables = {id: string;data: ScrapeGameRequest}
+
+    export const useScrapeGamePack = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof scrapeGamePack>>, TError,ScrapeGamePackMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof scrapeGamePack>>,
+        TError,
+        ScrapeGamePackMutationVariables,
+        TContext
+      > => {
+      return useMutation(() => getScrapeGamePackMutationOptions(options), queryClient);
+    }
+
+export const getGetGameScrapeUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/game-scrapes/${id}`
+}
+
+export const getGameScrape = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<GameScrapeResponse> => {
+
+  return apiFetch<GameScrapeResponse>(getGetGameScrapeUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGameScrapeQueryKey = (id: string,) => {
+    return [
+    `/api/admin/game-scrapes/${id}`
+    ] as const;
+    }
+
+
+export const getGetGameScrapeQueryOptions = <TData = Awaited<ReturnType<typeof getGameScrape>>, TError = ErrorType<ProblemDetails>>(id: string, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGameScrape>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  getGetGameScrapeQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGameScrape>>> = ({ signal }) => getGameScrape(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions}
+}
+
+export type GetGameScrapeQueryResult = NonNullable<Awaited<ReturnType<typeof getGameScrape>>>
+export type GetGameScrapeQueryError = ErrorType<ProblemDetails>
+
+
+export function useGetGameScrape<TData = Awaited<ReturnType<typeof getGameScrape>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGameScrape>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getGameScrape>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGameScrape<TData = Awaited<ReturnType<typeof getGameScrape>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGameScrape>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getGameScrape>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGameScrape<TData = Awaited<ReturnType<typeof getGameScrape>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGameScrape>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetGameScrape<TData = Awaited<ReturnType<typeof getGameScrape>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGameScrape>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+ ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetGameScrapeQueryOptions(id,options)
+
+  const query = useQuery(() => getGetGameScrapeQueryOptions(id,options), queryClient);
+
+  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
+}
+
+
+
+
+
+
+
+export const getCommitGameScrapeUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/game-scrapes/${id}/commit`
+}
+
+export const commitGameScrape = async (id: string,
+    saveGameMappingsRequest: SaveGameMappingsRequest, options?: Parameters<typeof apiFetch>[1]): Promise<GameMappingsResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<GameMappingsResponse>(getCommitGameScrapeUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveGameMappingsRequest)
+  }
+);}
+
+
+
+
+
+export const getCommitGameScrapeMutationKey = () => ['commitGameScrape'] as const;
+
+export const getCommitGameScrapeMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof commitGameScrape>>, TError,CommitGameScrapeMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): MutationOptions<Awaited<ReturnType<typeof commitGameScrape>>, TError,CommitGameScrapeMutationVariables, TContext> => {
+
+const mutationKey = getCommitGameScrapeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commitGameScrape>>, CommitGameScrapeMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  commitGameScrape(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CommitGameScrapeMutationResult = NonNullable<Awaited<ReturnType<typeof commitGameScrape>>>
+    export type CommitGameScrapeMutationBody = SaveGameMappingsRequest
+    export type CommitGameScrapeMutationError = ErrorType<ProblemDetails>
+    export type CommitGameScrapeMutationVariables = {id: string;data: SaveGameMappingsRequest}
+
+    export const useCommitGameScrape = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof commitGameScrape>>, TError,CommitGameScrapeMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof commitGameScrape>>,
+        TError,
+        CommitGameScrapeMutationVariables,
+        TContext
+      > => {
+      return useMutation(() => getCommitGameScrapeMutationOptions(options), queryClient);
+    }
+
+export const getGetGameImageMappingsUrl = (gameId: number,) => {
+
+
+
+
+  return `/api/admin/games/${gameId}/image-mappings`
+}
+
+export const getGameImageMappings = async (gameId: number, options?: Parameters<typeof apiFetch>[1]): Promise<GameMappingsResponse> => {
+
+  return apiFetch<GameMappingsResponse>(getGetGameImageMappingsUrl(gameId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGameImageMappingsQueryKey = (gameId: number,) => {
+    return [
+    `/api/admin/games/${gameId}/image-mappings`
+    ] as const;
+    }
+
+
+export const getGetGameImageMappingsQueryOptions = <TData = Awaited<ReturnType<typeof getGameImageMappings>>, TError = ErrorType<ProblemDetails>>(gameId: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGameImageMappings>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  getGetGameImageMappingsQueryKey(gameId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGameImageMappings>>> = ({ signal }) => getGameImageMappings(gameId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: gameId !== null && gameId !== undefined, ...queryOptions}
+}
+
+export type GetGameImageMappingsQueryResult = NonNullable<Awaited<ReturnType<typeof getGameImageMappings>>>
+export type GetGameImageMappingsQueryError = ErrorType<ProblemDetails>
+
+
+export function useGetGameImageMappings<TData = Awaited<ReturnType<typeof getGameImageMappings>>, TError = ErrorType<ProblemDetails>>(
+ gameId: number, options: { query:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGameImageMappings>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<DefinedInitialDataOptions<Awaited<ReturnType<typeof getGameImageMappings>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGameImageMappings<TData = Awaited<ReturnType<typeof getGameImageMappings>>, TError = ErrorType<ProblemDetails>>(
+ gameId: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGameImageMappings>>, TError, TData>>, 'initialData'> & Pick<
+        ReturnType<UndefinedInitialDataOptions<Awaited<ReturnType<typeof getGameImageMappings>>, TError, TData>> , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGameImageMappings<TData = Awaited<ReturnType<typeof getGameImageMappings>>, TError = ErrorType<ProblemDetails>>(
+ gameId: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGameImageMappings>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+  ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetGameImageMappings<TData = Awaited<ReturnType<typeof getGameImageMappings>>, TError = ErrorType<ProblemDetails>>(
+ gameId: number, options?: { query?:Omit<Partial<QueryOptions<Awaited<ReturnType<typeof getGameImageMappings>>, TError, TData>>, 'initialData'>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient
+ ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetGameImageMappingsQueryOptions(gameId,options)
+
+  const query = useQuery(() => getGetGameImageMappingsQueryOptions(gameId,options), queryClient);
+
+  return mergeProps(query, { queryKey: queryOptions.queryKey }) as any;
+}
+
+
+
+
+
+
+
+export const getSaveGameImageMappingsUrl = (gameId: number,) => {
+
+
+
+
+  return `/api/admin/games/${gameId}/image-mappings`
+}
+
+export const saveGameImageMappings = async (gameId: number,
+    saveGameMappingsRequest: SaveGameMappingsRequest, options?: Parameters<typeof apiFetch>[1]): Promise<GameMappingsResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<GameMappingsResponse>(getSaveGameImageMappingsUrl(gameId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveGameMappingsRequest)
+  }
+);}
+
+
+
+
+
+export const getSaveGameImageMappingsMutationKey = () => ['saveGameImageMappings'] as const;
+
+export const getSaveGameImageMappingsMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof saveGameImageMappings>>, TError,SaveGameImageMappingsMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): MutationOptions<Awaited<ReturnType<typeof saveGameImageMappings>>, TError,SaveGameImageMappingsMutationVariables, TContext> => {
+
+const mutationKey = getSaveGameImageMappingsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveGameImageMappings>>, SaveGameImageMappingsMutationVariables> = (props) => {
+          const {gameId,data} = props ?? {};
+
+          return  saveGameImageMappings(gameId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveGameImageMappingsMutationResult = NonNullable<Awaited<ReturnType<typeof saveGameImageMappings>>>
+    export type SaveGameImageMappingsMutationBody = SaveGameMappingsRequest
+    export type SaveGameImageMappingsMutationError = ErrorType<ProblemDetails>
+    export type SaveGameImageMappingsMutationVariables = {gameId: number;data: SaveGameMappingsRequest}
+
+    export const useSaveGameImageMappings = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof saveGameImageMappings>>, TError,SaveGameImageMappingsMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof saveGameImageMappings>>,
+        TError,
+        SaveGameImageMappingsMutationVariables,
+        TContext
+      > => {
+      return useMutation(() => getSaveGameImageMappingsMutationOptions(options), queryClient);
+    }
+
+export const getUploadCustomGameImageUrl = (gameId: number,) => {
+
+
+
+
+  return `/api/admin/games/${gameId}/items/images`
+}
+
+export const uploadCustomGameImage = async (gameId: number,
+    uploadCustomGameImageBody: UploadCustomGameImageBody, options?: Parameters<typeof apiFetch>[1]): Promise<CustomGameImageResponse> => {
+    const formData = new FormData();
+formData.append(`file`, uploadCustomGameImageBody.file);
+
+  return apiFetch<CustomGameImageResponse>(getUploadCustomGameImageUrl(gameId),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getUploadCustomGameImageMutationKey = () => ['uploadCustomGameImage'] as const;
+
+export const getUploadCustomGameImageMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof uploadCustomGameImage>>, TError,UploadCustomGameImageMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): MutationOptions<Awaited<ReturnType<typeof uploadCustomGameImage>>, TError,UploadCustomGameImageMutationVariables, TContext> => {
+
+const mutationKey = getUploadCustomGameImageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadCustomGameImage>>, UploadCustomGameImageMutationVariables> = (props) => {
+          const {gameId,data} = props ?? {};
+
+          return  uploadCustomGameImage(gameId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadCustomGameImageMutationResult = NonNullable<Awaited<ReturnType<typeof uploadCustomGameImage>>>
+    export type UploadCustomGameImageMutationBody = UploadCustomGameImageBody
+    export type UploadCustomGameImageMutationError = ErrorType<ProblemDetails>
+    export type UploadCustomGameImageMutationVariables = {gameId: number;data: UploadCustomGameImageBody}
+
+    export const useUploadCustomGameImage = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof uploadCustomGameImage>>, TError,UploadCustomGameImageMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof uploadCustomGameImage>>,
+        TError,
+        UploadCustomGameImageMutationVariables,
+        TContext
+      > => {
+      return useMutation(() => getUploadCustomGameImageMutationOptions(options), queryClient);
+    }
+
+export const getUploadGameCoverUrl = (gameId: number,) => {
+
+
+
+
+  return `/api/admin/games/${gameId}/cover`
+}
+
+export const uploadGameCover = async (gameId: number,
+    uploadGameCoverBody: UploadGameCoverBody, options?: Parameters<typeof apiFetch>[1]): Promise<GameResponse> => {
+    const formData = new FormData();
+formData.append(`file`, uploadGameCoverBody.file);
+
+  return apiFetch<GameResponse>(getUploadGameCoverUrl(gameId),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getUploadGameCoverMutationKey = () => ['uploadGameCover'] as const;
+
+export const getUploadGameCoverMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof uploadGameCover>>, TError,UploadGameCoverMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): MutationOptions<Awaited<ReturnType<typeof uploadGameCover>>, TError,UploadGameCoverMutationVariables, TContext> => {
+
+const mutationKey = getUploadGameCoverMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadGameCover>>, UploadGameCoverMutationVariables> = (props) => {
+          const {gameId,data} = props ?? {};
+
+          return  uploadGameCover(gameId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadGameCoverMutationResult = NonNullable<Awaited<ReturnType<typeof uploadGameCover>>>
+    export type UploadGameCoverMutationBody = UploadGameCoverBody
+    export type UploadGameCoverMutationError = ErrorType<ProblemDetails>
+    export type UploadGameCoverMutationVariables = {gameId: number;data: UploadGameCoverBody}
+
+    export const useUploadGameCover = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:MutationOptions<Awaited<ReturnType<typeof uploadGameCover>>, TError,UploadGameCoverMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: () => QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof uploadGameCover>>,
+        TError,
+        UploadGameCoverMutationVariables,
+        TContext
+      > => {
+      return useMutation(() => getUploadGameCoverMutationOptions(options), queryClient);
     }

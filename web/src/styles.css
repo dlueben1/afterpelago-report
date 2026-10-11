@@ -75,3 +75,41 @@
   --color-ap-grid: #c8d8f8;
   --color-ap-canvas: #f7faff;
 }
+
+.game-box-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 8rem), 10rem));
+  justify-content: start;
+  gap: 1rem;
+}
+
+.game-box-motion {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  aspect-ratio: 2 / 3;
+}
+
+@media (prefers-reduced-motion: reduce), (hover: none) {
+  .game-box-motion {
+    --transform: 0, 0 !important;
+    --shadow: 0rem 0rem !important;
+    filter: none !important;
+    transition: none !important;
+  }
+
+  .game-box-motion > :first-child,
+  .game-box-motion:hover > :first-child {
+    transform: none !important;
+    scale: 1 !important;
+    transition: none !important;
+  }
+
+  .game-box-motion > :nth-child(n + 2) {
+    scale: 1 !important;
+  }
+
+  .game-box-motion > :first-child::before {
+    display: none !important;
+  }
+}

@@ -13,7 +13,7 @@ namespace Afterpelago.Services;
 
 /// <summary>Imports, publishes, deletes, and repairs persisted Archipelago sessions.</summary>
 public sealed partial class SessionService(
-    AfterpelagoDbContext db, DataPaths paths, TimeProvider time, ILogger<SessionService> logger)
+    AfterpelagoDbContext db, DataPaths paths, TimeProvider time, ILogger<SessionService> logger, GameCatalogService gameCatalog)
 {
     public const long MaximumFileLength = 25L * 1024 * 1024;
     private const int WarningLimit = 100;
@@ -91,6 +91,7 @@ public sealed partial class SessionService(
                 import.WarningCount = discovery.Warnings.Total;
                 import.WarningDetailsJson = JsonSerializer.Serialize(discovery.Warnings.Items);
                 await db.SaveChangesAsync(ct);
+                await gameCatalog.ObserveSessionAsync(session, ct);
                 await transaction.CommitAsync(ct);
             }
             catch

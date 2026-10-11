@@ -40,6 +40,8 @@ public static class SessionEndpoints
             .Produces<SessionDetailsResponse>().Produces(StatusCodes.Status404NotFound);
         api.MapGet("/{id:int}/checks", GetChecks).WithName("GetSessionChecks")
             .Produces<IReadOnlyList<CheckResponse>>().Produces(StatusCodes.Status404NotFound);
+        api.MapGet("/{id:int}/checks/daily", GetDailyChecks).WithName("GetSessionChecksDaily")
+            .Produces<IReadOnlyList<DailyCheckCountResponse>>().Produces(StatusCodes.Status404NotFound);
         api.MapGet("/{id:int}/imports/{importId:int}/file", DownloadImport).WithName("DownloadSessionImport").ExcludeFromDescription();
         return api;
     }
@@ -110,6 +112,7 @@ public static class SessionEndpoints
     {
         var session = await db.Sessions.AsNoTracking().AsSplitQuery()
             .Include(s => s.Slots).ThenInclude(s => s.Connections).ThenInclude(c => c.LogEvent)
+            .Include(s => s.Slots).ThenInclude(s => s.Game)
             .Include(s => s.Imports)
             .SingleOrDefaultAsync(s => s.Id == id && s.State == SessionState.Published, ct);
         if (session is null) return TypedResults.NotFound();
@@ -117,7 +120,8 @@ public static class SessionEndpoints
             .Select(x => new SessionSlotResponse(x.Id, x.TeamNumber, x.PlayerName, x.GameName, x.GoalCompleted,
                 x.Connections.OrderBy(c => c.LogEvent.TimestampUtc).ThenBy(c => c.LogEvent.SourceLineNumber)
                     .Select(c => new ConnectionResponse(c.Id, c.LogEvent.TimestampUtc!.Value, c.Action.ToString(), c.Kind.ToString(), c.ClientVersion,
-                        c.TagsJson is null ? [] : JsonSerializer.Deserialize<string[]>(c.TagsJson) ?? [])).ToList())).ToList();
+                        c.TagsJson is null ? [] : JsonSerializer.Deserialize<string[]>(c.TagsJson) ?? [])).ToList(),
+                x.Game?.CoverHash is null ? null : $"/api/games/{x.Game.Id}/cover.webp")).ToList();
         var imports = session.Imports.OrderBy(i => i.ImportedAt)
             .Select(i => new SessionImportInfoResponse(i.Id, i.ImportedAt, i.Method.ToString(), i.OriginalFileName, i.ByteLength, i.Sha256, i.WarningCount)).ToList();
         var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -127,18 +131,45 @@ public static class SessionEndpoints
         if (counts is null) return TypedResults.NotFound();
         var totalPlaytimeSeconds = await playtime.GetTotalPlaytimeSecondsAsync(id, session.StartUtc!.Value, session.EndUtc!.Value, ct);
         return TypedResults.Ok(new SessionDetailsResponse(session.Id, session.Name, session.StartUtc!.Value, session.EndUtc!.Value,
-            slots, imports, session.Status.ToString(), isFavorite, counts.CheckCount, counts.HintCount, totalPlaytimeSeconds));
+            slots, imports, session.Status.ToString(), isFavorite, counts.CheckCount, counts.HintCount, totalPlaytimeSeconds,
+            session.SourceUtcOffsetMinutes ?? 0));
     }
 
     /// <summary>Returns the complete ordered check history for a published session.</summary>
     private static async Task<IResult> GetChecks(int id, AfterpelagoDbContext db, CancellationToken ct)
     {
         if (!await db.Sessions.AnyAsync(s => s.Id == id && s.State == SessionState.Published, ct)) return TypedResults.NotFound();
-        var checks = await db.Checks.AsNoTracking().Where(c => c.SessionId == id)
+        var rows = await db.Checks.AsNoTracking().Where(c => c.SessionId == id)
             .OrderBy(c => c.LogEvent.TimestampUtc).ThenBy(c => c.LogEvent.SourceLineNumber).ThenBy(c => c.LogEventId)
-            .Select(c => new CheckResponse(c.Id, c.LogEvent.TimestampUtc!.Value, c.SenderSlot.TeamNumber, c.SenderSlotId, c.SenderSlot.PlayerName,
-                c.ReceiverSlotId, c.ReceiverSlot.PlayerName, c.ItemName, c.LocationName, c.LogEvent.SourceLineNumber)).ToListAsync(ct);
+            .Select(c => new
+            {
+                c.Id, TimestampUtc = c.LogEvent.TimestampUtc!.Value, c.SenderSlot.TeamNumber, c.SenderSlotId,
+                SenderName = c.SenderSlot.PlayerName, c.ReceiverSlotId, ReceiverName = c.ReceiverSlot.PlayerName,
+                c.ItemName, c.LocationName, c.LogEvent.SourceLineNumber, c.ReceiverSlot.GameId,
+                ImageHash = c.ReceiverSlot.GameId != null
+                    ? db.GameItems.Where(i => i.GameId == c.ReceiverSlot.GameId && i.Name == c.ItemName)
+                        .Select(i => i.Image != null && i.Image.Candidate != null ? i.Image.Candidate.Asset.Hash : null)
+                        .FirstOrDefault()
+                    : null,
+            }).ToListAsync(ct);
+        var checks = rows.Select(r => new CheckResponse(r.Id, r.TimestampUtc, r.TeamNumber, r.SenderSlotId, r.SenderName,
+            r.ReceiverSlotId, r.ReceiverName, r.ItemName, r.LocationName, r.SourceLineNumber,
+            r.GameId is null || r.ImageHash is null ? null : $"/api/games/{r.GameId}/images/{r.ImageHash}.webp")).ToList();
         return TypedResults.Ok(checks);
+    }
+
+    /// <summary>Returns per-day check totals for a published session, grouped by the session's source-local date.</summary>
+    private static async Task<IResult> GetDailyChecks(int id, AfterpelagoDbContext db, CancellationToken ct)
+    {
+        var offsetMinutes = await db.Sessions.AsNoTracking().Where(s => s.Id == id && s.State == SessionState.Published)
+            .Select(s => s.SourceUtcOffsetMinutes).SingleOrDefaultAsync(ct);
+        if (offsetMinutes is null) return TypedResults.NotFound();
+        var offset = TimeSpan.FromMinutes(offsetMinutes.Value);
+        var timestamps = await db.Checks.AsNoTracking().Where(c => c.SessionId == id)
+            .Select(c => c.LogEvent.TimestampUtc!.Value).ToListAsync(ct);
+        var days = timestamps.GroupBy(t => DateOnly.FromDateTime((t + offset).DateTime)).OrderBy(g => g.Key)
+            .Select(g => new DailyCheckCountResponse(g.Key, g.Count())).ToList();
+        return TypedResults.Ok(days);
     }
 
     /// <summary>Downloads an original source file for a published session.</summary>

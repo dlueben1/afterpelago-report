@@ -20,6 +20,7 @@ const items: SidebarItem[] = [
 ];
 
 const adminItems: SidebarItem[] = [
+  { label: "Game Scraper", href: "/game-scraper", icon: "icon-[tabler--photo-search]" },
   {
     label: "User Management",
     href: "/users",

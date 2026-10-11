@@ -21,4 +21,6 @@ export interface CheckResponse {
   locationName: string;
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
   sourceLineNumber: number | string;
+  /** @nullable */
+  imageUrl: string | null;
 }

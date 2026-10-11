@@ -23,6 +23,12 @@ builder.Services.AddDbContext<AfterpelagoDbContext>((sp, options) =>
     options.UseSqlite(sp.GetRequiredService<DataPaths>().ConnectionString));
 builder.Services.AddScoped<SessionService>();
 builder.Services.AddScoped<SessionPlaytimeService>();
+builder.Services.AddScoped<GameCatalogService>();
+builder.Services.AddScoped<GameScrapeService>();
+builder.Services.AddScoped<CoverArtService>();
+builder.Services.AddSingleton<GameScrapeGate>();
+builder.Services.AddSingleton<GameImageConverter>();
+builder.Services.AddSingleton<PopTrackerExtractor>();
 builder.Services.Configure<FormOptions>(options => options.MultipartBodyLengthLimit = SessionService.MaximumFileLength + 1024 * 1024);
 
 builder.AddAfterpelagoAuth(isContractGeneration);
@@ -38,6 +44,7 @@ if (!isContractGeneration && !EF.IsDesignTime)
     using var scope = app.Services.CreateScope();
     await scope.ServiceProvider.GetRequiredService<AfterpelagoDbContext>().Database.MigrateAsync();
     await scope.ServiceProvider.GetRequiredService<SessionService>().CleanupAsync(CancellationToken.None);
+    await scope.ServiceProvider.GetRequiredService<GameScrapeService>().CleanupAsync(CancellationToken.None);
 }
 
 app.UseExceptionHandler();
@@ -51,6 +58,24 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+// Apply the larger ZIP limit before antiforgery reads the multipart form. Other uploads keep their existing limits.
+app.Use(async (context, next) =>
+{
+    var metadata = context.GetEndpoint()?.Metadata;
+    var requestLimit = metadata?.GetMetadata<GamePackUploadMetadata>() is not null
+        ? PopTrackerArchive.MaximumUpload + 1024 * 1024
+        : metadata?.GetMetadata<GameImageUploadMetadata>() is not null
+            ? GameScrapeService.MaximumCustomImageUpload + 1024 * 1024
+            : metadata?.GetMetadata<GameCoverUploadMetadata>() is not null
+                ? CoverArtService.MaximumCoverUpload + 1024 * 1024
+                : 0;
+    if (requestLimit > 0)
+    {
+        if (context.Features.Get<IHttpMaxRequestBodySizeFeature>() is { IsReadOnly: false } size) size.MaxRequestBodySize = requestLimit;
+        context.Features.Set<IFormFeature>(new FormFeature(context.Request, new FormOptions { MultipartBodyLengthLimit = requestLimit }));
+    }
+    await next(context);
+});
 app.UseAntiforgery();
 app.UseMiddleware<AntiforgeryValidationMiddleware>();
 
@@ -64,6 +89,7 @@ app.MapDemoEndpoints().RequireAuthorization();
 app.MapAdminEndpoints().RequireAuthorization(AuthSetup.AdminOnlyPolicy);
 app.MapSessionEndpoints();
 app.MapUsersEndpoints();
+app.MapGameEndpoints();
 
 // Unknown API routes must be real 404s, never the SPA shell.
 app.Map("/api/{**rest}", () => Results.NotFound());
