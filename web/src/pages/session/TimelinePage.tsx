@@ -25,26 +25,60 @@ import type {
 import { ApiError } from "../../api/transport";
 import Card from "../../components/cards/Card";
 import {
+  buildCalendarOption,
+  calendarHeightPx,
+} from "../../lib/session-calendar";
+import {
+  buildDayBuckets,
+  buildEpisodeBuckets,
+  buildProgressOption,
+} from "../../lib/session-progress";
+import {
+  buildGapBreaks,
   buildTimelineOption,
+  listEpisodesWithChecks,
   listSourceDays,
   sourceDay,
   sourceDayWindow,
 } from "../../lib/session-timeline";
+import { buildSlotColors } from "../../lib/slot-colors";
+import {
+  OverTimeOptions,
+  PerDayOptions,
+  ProgressOptions,
+} from "./TimelineOptions";
 
 // ECharts is large; load it as its own chunk.
 const EChart = lazy(() =>
   import("../../charts/EChart").then((m) => ({ default: m.EChart })),
 );
 
+type ChartTab = "over-time" | "per-day" | "progress";
+
+const TABS: { id: ChartTab; label: string; title: string; icon: string }[] = [
+  {
+    id: "over-time",
+    label: "Over Time",
+    title: "Checks Over Time",
+    icon: "icon-[tabler--timeline]",
+  },
+  {
+    id: "per-day",
+    label: "Per Day",
+    title: "Checks per Day",
+    icon: "icon-[tabler--calendar-stats]",
+  },
+  {
+    id: "progress",
+    label: "Leaderboard",
+    title: "Daily Leaderboard",
+    icon: "icon-[tabler--chart-line]",
+  },
+];
+
 function errorMessage(error: unknown): string {
   if (error instanceof ApiError) return error.detail ?? error.message;
   return error instanceof Error ? error.message : "Please try again.";
-}
-
-function formatDay(day: string): string {
-  return new Date(`${day}T00:00:00`).toLocaleDateString(undefined, {
-    dateStyle: "medium",
-  });
 }
 
 export default function TimelinePage() {
@@ -123,6 +157,11 @@ export default function TimelinePage() {
     });
   });
   const offsetMinutes = () => Number(session.data?.sourceUtcOffsetMinutes ?? 0);
+  const slots = () => session.data?.slots ?? [];
+  const allEpisodes = () => session.data?.episodes ?? [];
+  const listedEpisodes = createMemo(() =>
+    listEpisodesWithChecks(allEpisodes()),
+  );
   const days = createMemo(() =>
     listSourceDays(checks.data ?? [], offsetMinutes()),
   );
@@ -134,19 +173,87 @@ export default function TimelinePage() {
     }
     return counts;
   });
-  const selectedDay = () => {
-    const day = searchParams.day;
-    return typeof day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(day)
-      ? day
+  const slotColors = createMemo(() => buildSlotColors(slots()));
+
+  const tab = (): ChartTab =>
+    searchParams.chart === "per-day" || searchParams.chart === "progress"
+      ? searchParams.chart
+      : "over-time";
+  const activeTab = () => TABS.find((entry) => entry.id === tab())!;
+
+  // Legacy ?day= links still resolve to a day range.
+  const selectedRange = createMemo(() => {
+    const raw =
+      typeof searchParams.range === "string"
+        ? searchParams.range
+        : typeof searchParams.day === "string"
+          ? `day:${searchParams.day}`
+          : "";
+    const day = /^day:(\d{4}-\d{2}-\d{2})$/.exec(raw)?.[1];
+    if (day)
+      return { value: raw, window: sourceDayWindow(day, offsetMinutes()) };
+    const index = /^episode:(\d+)$/.exec(raw)?.[1];
+    const episode = listedEpisodes().find((e) => String(e.index) === index);
+    return episode
+      ? {
+          value: raw,
+          window: {
+            start: Date.parse(episode.startUtc),
+            end: Date.parse(episode.endUtc),
+          },
+        }
       : undefined;
-  };
-  const chartWindow = createMemo(() => {
-    const day = selectedDay();
-    return day ? sourceDayWindow(day, offsetMinutes()) : undefined;
   });
-  const option = createMemo(() =>
-    buildTimelineOption(checks.data ?? [], chartWindow()),
+  const chartWindow = () => selectedRange()?.window;
+
+  const skipGaps = () => searchParams.skipGaps === "1";
+  const canSkipGaps = createMemo(
+    () =>
+      buildGapBreaks(allEpisodes(), checks.data ?? [], chartWindow()).length >
+      0,
   );
+  const overTimeOption = createMemo(() =>
+    buildTimelineOption(
+      checks.data ?? [],
+      chartWindow(),
+      slotColors(),
+      slots(),
+      skipGaps()
+        ? buildGapBreaks(allEpisodes(), checks.data ?? [], chartWindow())
+        : [],
+    ),
+  );
+  const calendarOption = createMemo(() =>
+    buildCalendarOption(
+      checks.data ?? [],
+      slots(),
+      slotColors(),
+      offsetMinutes(),
+    ),
+  );
+
+  const granularity = () =>
+    searchParams.granularity === "episode" && listedEpisodes().length > 0
+      ? "episode"
+      : "day";
+  const focusSlot = () => {
+    const value =
+      typeof searchParams.focus === "string" ? searchParams.focus : "";
+    return slots().some((slot) => String(slot.id) === value) ? value : "";
+  };
+  const progressOption = createMemo(() =>
+    buildProgressOption(
+      checks.data ?? [],
+      slots(),
+      slotColors(),
+      granularity() === "episode"
+        ? buildEpisodeBuckets(listedEpisodes())
+        : buildDayBuckets(checks.data ?? [], offsetMinutes()),
+      focusSlot() ? Number(focusSlot()) : undefined,
+    ),
+  );
+  const progressHeight = () => `${Math.max(420, slots().length * 34 + 140)}px`;
+
   const unavailable = () =>
     sessionId() === undefined ||
     (session.error instanceof ApiError && session.error.status === 404) ||
@@ -206,84 +313,54 @@ export default function TimelinePage() {
         </Match>
         <Match when={session.data && checks.data}>
           <Card color="ap-grid">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <label class="select flex w-full min-w-0 items-center gap-2 sm:w-auto">
-                <span
-                  class="icon-[tabler--calendar] size-5 shrink-0 text-ap-muted"
-                  aria-hidden="true"
-                />
-                <span class="sr-only">Filter by day</span>
-                <select
-                  class="min-w-0 grow"
-                  value={selectedDay() ?? ""}
-                  onChange={(event) =>
+            <Switch>
+              <Match when={tab() === "over-time"}>
+                <OverTimeOptions
+                  days={days()}
+                  dayCounts={dayCounts()}
+                  episodes={listedEpisodes()}
+                  range={selectedRange()?.value ?? ""}
+                  onRangeChange={(value) =>
                     setSearchParams({
-                      day: event.currentTarget.value || undefined,
+                      range: value || undefined,
+                      day: undefined,
                     })
                   }
-                >
-                  <option value="">Entire session</option>
-                  <For each={days()}>
-                    {(day) => (
-                      <option value={day}>
-                        {formatDay(day)} (
-                        {(dayCounts().get(day) ?? 0).toLocaleString()} checks)
-                      </option>
-                    )}
-                  </For>
-                </select>
-              </label>
-              <div class="flex items-center gap-2 sm:ml-auto">
-                <div class="join" role="group" aria-label="Chart drag mode">
-                  <div class="tooltip" data-tip="Select a time range to zoom">
-                    <button
-                      type="button"
-                      class={`btn btn-square btn-sm join-item ${dragMode() === "zoom" ? "btn-primary" : "btn-outline"}`}
-                      aria-label="Select range to zoom"
-                      aria-pressed={dragMode() === "zoom"}
-                      onClick={() => setDragMode("zoom")}
-                    >
-                      <span
-                        class="icon-[tabler--zoom-in] size-5"
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </div>
-                  <div class="tooltip" data-tip="Pan across time">
-                    <button
-                      type="button"
-                      class={`btn btn-square btn-sm join-item ${dragMode() === "pan" ? "btn-primary" : "btn-outline"}`}
-                      aria-label="Pan across time"
-                      aria-pressed={dragMode() === "pan"}
-                      onClick={() => setDragMode("pan")}
-                    >
-                      <span
-                        class="icon-[tabler--hand-move] size-5"
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </div>
-                </div>
-                <div class="tooltip" data-tip="Reset zoom">
-                  <button
-                    type="button"
-                    class="btn btn-outline btn-square btn-sm"
-                    aria-label="Reset zoom"
-                    onClick={resetZoom}
-                  >
-                    <span
-                      class="icon-[tabler--zoom-reset] size-5"
-                      aria-hidden="true"
-                    />
-                  </button>
-                </div>
-              </div>
-            </div>
+                  skipGaps={skipGaps()}
+                  canSkipGaps={canSkipGaps()}
+                  onSkipGapsChange={(value) =>
+                    setSearchParams({ skipGaps: value ? "1" : undefined })
+                  }
+                  dragMode={dragMode()}
+                  onDragModeChange={setDragMode}
+                  onResetZoom={resetZoom}
+                />
+              </Match>
+              <Match when={tab() === "per-day"}>
+                <PerDayOptions />
+              </Match>
+              <Match when={tab() === "progress"}>
+                <ProgressOptions
+                  slots={slots()}
+                  focus={focusSlot()}
+                  onFocusChange={(value) =>
+                    setSearchParams({ focus: value || undefined })
+                  }
+                  granularity={granularity()}
+                  canUseEpisodes={listedEpisodes().length > 0}
+                  onGranularityChange={(value) =>
+                    setSearchParams({
+                      granularity: value === "episode" ? value : undefined,
+                    })
+                  }
+                />
+              </Match>
+            </Switch>
           </Card>
           <Card
-            title="Checks Over Time"
+            title={activeTab().title}
             subtitle={session.data!.name}
-            icon="icon-[tabler--timeline]"
+            icon={activeTab().icon}
             color="ap-pink"
             class="min-h-96"
           >
@@ -295,13 +372,80 @@ export default function TimelinePage() {
                 </p>
               }
             >
-              <EChart
-                class="h-[32rem] w-full"
-                label={`Cumulative checks over time for ${session.data!.name}`}
-                option={option()}
-                onUpdate={handleChartUpdate}
-                onEvents={{ globalcursortaken: handleGlobalCursor }}
-              />
+              <div role="tablist" class="tabs tabs-box">
+                <For each={TABS}>
+                  {(entry) => (
+                    <>
+                      <input
+                        type="radio"
+                        name="timeline-chart"
+                        class="tab"
+                        aria-label={entry.label}
+                        checked={tab() === entry.id}
+                        onChange={() =>
+                          setSearchParams({
+                            chart:
+                              entry.id === "over-time" ? undefined : entry.id,
+                          })
+                        }
+                      />
+                      <div class="tab-content bg-base-100 border-base-300 p-4">
+                        <Show when={tab() === entry.id}>
+                          <Switch>
+                            <Match when={entry.id === "over-time"}>
+                              <EChart
+                                class="h-[32rem] w-full"
+                                label={`Cumulative checks over time for ${session.data!.name}`}
+                                option={overTimeOption()}
+                                onUpdate={handleChartUpdate}
+                                onEvents={{
+                                  globalcursortaken: handleGlobalCursor,
+                                }}
+                              />
+                            </Match>
+                            <Match when={entry.id === "per-day"}>
+                              <EChart
+                                class="w-full"
+                                style={{
+                                  height: `${calendarHeightPx(checks.data ?? [], offsetMinutes())}px`,
+                                }}
+                                label={`Checks found per day, by slot, for ${session.data!.name}`}
+                                option={calendarOption()}
+                              />
+                              <ul class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                                <For each={slots()}>
+                                  {(slot) => (
+                                    <li class="flex items-center gap-2">
+                                      <span
+                                        class="inline-block size-3 rounded-full"
+                                        style={{
+                                          "background-color": slotColors().get(
+                                            Number(slot.id),
+                                          ),
+                                        }}
+                                        aria-hidden="true"
+                                      />
+                                      {slot.playerName}
+                                    </li>
+                                  )}
+                                </For>
+                              </ul>
+                            </Match>
+                            <Match when={entry.id === "progress"}>
+                              <EChart
+                                class="w-full"
+                                style={{ height: progressHeight() }}
+                                label={`Share of each slot's checks found over time for ${session.data!.name}`}
+                                option={progressOption()}
+                              />
+                            </Match>
+                          </Switch>
+                        </Show>
+                      </div>
+                    </>
+                  )}
+                </For>
+              </div>
             </Show>
           </Card>
         </Match>

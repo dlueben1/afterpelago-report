@@ -29,7 +29,7 @@ export default function UserAvatar(props: UserAvatarProps) {
       {(user) => (
         <div class="avatar">
           <div
-            class="mask mask-hexagon-2"
+            class="mask mask-circle"
             style={{ width: `${props.size}px`, height: `${props.size}px` }}
           >
             <img

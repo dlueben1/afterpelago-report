@@ -18,4 +18,6 @@ export interface SessionSlotResponse {
   connections: ConnectionResponse[];
   /** @nullable */
   coverUrl: string | null;
+  /** @nullable */
+  goalCompletedUtc: string | null;
 }

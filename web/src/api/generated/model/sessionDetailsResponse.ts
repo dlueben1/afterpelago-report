@@ -4,6 +4,7 @@
  * Afterpelago | v1
  * OpenAPI spec version: 1.0.0
  */
+import type { EpisodeResponse } from './episodeResponse';
 import type { SessionImportInfoResponse } from './sessionImportInfoResponse';
 import type { SessionSlotResponse } from './sessionSlotResponse';
 
@@ -28,4 +29,5 @@ export interface SessionDetailsResponse {
   totalPlaytimeSeconds: number | string | null;
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
   sourceUtcOffsetMinutes: number | string;
+  episodes: EpisodeResponse[];
 }

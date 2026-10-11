@@ -1,14 +1,17 @@
-import { BarChart, LineChart } from "echarts/charts";
+import { BarChart, CustomChart, LineChart, ScatterChart } from "echarts/charts";
 import {
   BrushComponent,
+  CalendarComponent,
   DataZoomComponent,
   DataZoomInsideComponent,
   GridComponent,
+  MarkLineComponent,
   ToolboxComponent,
   TooltipComponent,
 } from "echarts/components";
 import * as echarts from "echarts/core";
 import type { EChartsCoreOption } from "echarts/core";
+import { AxisBreak } from "echarts/features";
 import { CanvasRenderer } from "echarts/renderers";
 import {
   createEffect,
@@ -16,15 +19,21 @@ import {
   onCleanup,
   onMount,
   untrack,
+  type JSX,
 } from "solid-js";
 
 echarts.use([
+  AxisBreak,
   BarChart,
+  CustomChart,
   LineChart,
+  ScatterChart,
   BrushComponent,
+  CalendarComponent,
   DataZoomComponent,
   DataZoomInsideComponent,
   GridComponent,
+  MarkLineComponent,
   ToolboxComponent,
   TooltipComponent,
   CanvasRenderer,
@@ -33,6 +42,7 @@ echarts.use([
 interface EChartProps {
   option: EChartsCoreOption;
   class?: string;
+  style?: JSX.CSSProperties;
   label: string;
   /** ECharts event handlers, e.g. { click: (params) => ... }. Bound on mount. */
   onEvents?: Record<string, (params: unknown) => void>;
@@ -74,6 +84,7 @@ export function EChart(props: EChartProps) {
     <div
       ref={host}
       class={props.class}
+      style={props.style}
       role="img"
       aria-label={props.label}
       data-testid="echart"

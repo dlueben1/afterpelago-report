@@ -1529,6 +1529,41 @@
           }
         }
       },
+      "EpisodeResponse": {
+        "required": [
+          "index",
+          "startUtc",
+          "endUtc",
+          "checkCount"
+        ],
+        "type": "object",
+        "properties": {
+          "index": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "startUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "checkCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "GameCandidateResponse": {
         "required": [
           "key",
@@ -2165,7 +2200,8 @@
           "checkCount",
           "hintCount",
           "totalPlaytimeSeconds",
-          "sourceUtcOffsetMinutes"
+          "sourceUtcOffsetMinutes",
+          "episodes"
         ],
         "type": "object",
         "properties": {
@@ -2238,6 +2274,12 @@
               "string"
             ],
             "format": "int32"
+          },
+          "episodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EpisodeResponse"
+            }
           }
         }
       },
@@ -2421,7 +2463,8 @@
           "gameName",
           "goalCompleted",
           "connections",
-          "coverUrl"
+          "coverUrl",
+          "goalCompletedUtc"
         ],
         "type": "object",
         "properties": {
@@ -2464,6 +2507,13 @@
               "null",
               "string"
             ]
+          },
+          "goalCompletedUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },

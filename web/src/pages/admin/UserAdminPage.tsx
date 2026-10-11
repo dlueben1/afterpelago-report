@@ -39,9 +39,12 @@ function formatTimestamp(value: string) {
 /** Returns the DaisyUI badge classes for an access status. */
 function statusClass(status: string) {
   switch (status) {
-    case "Approved": return "badge badge-success";
-    case "Denied": return "badge badge-error";
-    default: return "badge badge-warning";
+    case "Approved":
+      return "badge badge-success";
+    case "Denied":
+      return "badge badge-error";
+    default:
+      return "badge badge-warning";
   }
 }
 
@@ -57,12 +60,17 @@ export default function UserAdminPage() {
   const isBusy = () => pendingAction() !== undefined;
 
   /** Saves an approval decision and reloads the user list. */
-  async function setApproval(user: UserApprovalResponse, status: ApprovalDecision) {
+  async function setApproval(
+    user: UserApprovalResponse,
+    status: ApprovalDecision,
+  ) {
     setError(undefined);
     setPendingAction({ userId: user.discordUserId, status });
     try {
       await updateUserApproval(user.discordUserId, { status });
-      await queryClient.invalidateQueries({ queryKey: getGetUserApprovalsQueryKey() });
+      await queryClient.invalidateQueries({
+        queryKey: getGetUserApprovalsQueryKey(),
+      });
     } catch (requestError) {
       setError(errorMessage(requestError));
     } finally {
@@ -88,7 +96,11 @@ export default function UserAdminPage() {
 
       <Switch>
         <Match when={approvals.isPending}>
-          <div class="flex min-h-40 items-center justify-center" role="status" aria-label="Loading users">
+          <div
+            class="flex min-h-40 items-center justify-center"
+            role="status"
+            aria-label="Loading users"
+          >
             <span class="loading loading-spinner loading-lg text-primary" />
           </div>
         </Match>
@@ -110,32 +122,42 @@ export default function UserAdminPage() {
               </li>
               <For each={users()}>
                 {(user) => {
-                  const action = () => pendingAction()?.userId === user.discordUserId
-                    ? pendingAction()?.status
-                    : undefined;
+                  const action = () =>
+                    pendingAction()?.userId === user.discordUserId
+                      ? pendingAction()?.status
+                      : undefined;
                   return (
                     <li class="list-row items-center">
                       <div class="avatar">
-                        <div class="mask mask-hexagon-2 size-12">
+                        <div class="mask mask-circle size-12">
                           <img src={avatarUrl(user, 48)} alt="" />
                         </div>
                       </div>
 
                       <div class="min-w-0">
-                        <div class="truncate font-semibold">{user.displayName}</div>
-                        <div class="truncate text-xs opacity-60">
-                          {user.username ? `@${user.username}` : "Discord user"} | {user.role}
+                        <div class="truncate font-semibold">
+                          {user.displayName}
                         </div>
-                        <div class="break-all text-xs opacity-60">ID: {user.discordUserId}</div>
+                        <div class="truncate text-xs opacity-60">
+                          {user.username ? `@${user.username}` : "Discord user"}{" "}
+                          | {user.role}
+                        </div>
+                        <div class="break-all text-xs opacity-60">
+                          ID: {user.discordUserId}
+                        </div>
                         <div class="mt-1 text-xs opacity-60">
                           Requested {formatTimestamp(user.requestedAt)}
-                          <span class="mx-1" aria-hidden="true">|</span>
+                          <span class="mx-1" aria-hidden="true">
+                            |
+                          </span>
                           Last seen {formatTimestamp(user.lastSeenAt)}
                         </div>
                       </div>
 
                       <div class="flex flex-wrap items-center gap-2">
-                        <span class={statusClass(user.status)}>{user.status}</span>
+                        <span class={statusClass(user.status)}>
+                          {user.status}
+                        </span>
                       </div>
 
                       <div class="flex flex-wrap justify-end gap-2">
@@ -146,7 +168,10 @@ export default function UserAdminPage() {
                           aria-label={`Approve ${user.displayName}`}
                           onClick={() => setApproval(user, "Approved")}
                         >
-                          <Show when={action() === "Approved"} fallback="Approve">
+                          <Show
+                            when={action() === "Approved"}
+                            fallback="Approve"
+                          >
                             <span class="loading loading-spinner loading-xs" />
                           </Show>
                         </button>

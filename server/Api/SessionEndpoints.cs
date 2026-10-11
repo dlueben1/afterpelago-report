@@ -108,7 +108,7 @@ public static class SessionEndpoints
     }
 
     /// <summary>Returns published session details without the full check history.</summary>
-    private static async Task<IResult> GetSession(int id, AfterpelagoDbContext db, SessionPlaytimeService playtime, ClaimsPrincipal user, CancellationToken ct)
+    private static async Task<IResult> GetSession(int id, AfterpelagoDbContext db, SessionPlaytimeService playtimeService, ClaimsPrincipal user, CancellationToken ct)
     {
         var session = await db.Sessions.AsNoTracking().AsSplitQuery()
             .Include(s => s.Slots).ThenInclude(s => s.Connections).ThenInclude(c => c.LogEvent)
@@ -116,12 +116,17 @@ public static class SessionEndpoints
             .Include(s => s.Imports)
             .SingleOrDefaultAsync(s => s.Id == id && s.State == SessionState.Published, ct);
         if (session is null) return TypedResults.NotFound();
+        var goalTimes = await db.SessionLogEvents.AsNoTracking()
+            .Where(e => e.SessionId == id && e.Category == SessionEventCategory.GoalCompleted && e.SlotId != null && e.TimestampUtc != null)
+            .Select(e => new { e.SlotId, Timestamp = e.TimestampUtc!.Value }).ToListAsync(ct);
+        var goalBySlot = goalTimes.GroupBy(e => e.SlotId!.Value).ToDictionary(g => g.Key, g => g.Min(e => e.Timestamp));
         var slots = session.Slots.OrderBy(x => x.TeamNumber).ThenBy(x => x.PlayerName, StringComparer.Ordinal)
             .Select(x => new SessionSlotResponse(x.Id, x.TeamNumber, x.PlayerName, x.GameName, x.GoalCompleted,
                 x.Connections.OrderBy(c => c.LogEvent.TimestampUtc).ThenBy(c => c.LogEvent.SourceLineNumber)
                     .Select(c => new ConnectionResponse(c.Id, c.LogEvent.TimestampUtc!.Value, c.Action.ToString(), c.Kind.ToString(), c.ClientVersion,
                         c.TagsJson is null ? [] : JsonSerializer.Deserialize<string[]>(c.TagsJson) ?? [])).ToList(),
-                x.Game?.CoverHash is null ? null : $"/api/games/{x.Game.Id}/cover.webp")).ToList();
+                x.Game?.CoverHash is null ? null : $"/api/games/{x.Game.Id}/cover.webp",
+                goalBySlot.TryGetValue(x.Id, out var goalUtc) ? goalUtc : null)).ToList();
         var imports = session.Imports.OrderBy(i => i.ImportedAt)
             .Select(i => new SessionImportInfoResponse(i.Id, i.ImportedAt, i.Method.ToString(), i.OriginalFileName, i.ByteLength, i.Sha256, i.WarningCount)).ToList();
         var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -129,10 +134,14 @@ public static class SessionEndpoints
         var counts = await db.Sessions.AsNoTracking().Where(s => s.Id == id && s.State == SessionState.Published)
             .Select(s => new { CheckCount = s.Checks.Count, HintCount = s.Hints.Count }).SingleOrDefaultAsync(ct);
         if (counts is null) return TypedResults.NotFound();
-        var totalPlaytimeSeconds = await playtime.GetTotalPlaytimeSecondsAsync(id, session.StartUtc!.Value, session.EndUtc!.Value, ct);
+        var playtime = await playtimeService.GetPlaytimeAsync(id, session.StartUtc!.Value, session.EndUtc!.Value, ct);
+        var checkTimes = await db.Checks.AsNoTracking().Where(c => c.SessionId == id)
+            .Select(c => c.LogEvent.TimestampUtc!.Value).ToListAsync(ct);
+        var episodes = playtime.Episodes
+            .Select((e, i) => new EpisodeResponse(i + 1, e.Start, e.End, checkTimes.Count(t => t >= e.Start && t <= e.End))).ToList();
         return TypedResults.Ok(new SessionDetailsResponse(session.Id, session.Name, session.StartUtc!.Value, session.EndUtc!.Value,
-            slots, imports, session.Status.ToString(), isFavorite, counts.CheckCount, counts.HintCount, totalPlaytimeSeconds,
-            session.SourceUtcOffsetMinutes ?? 0));
+            slots, imports, session.Status.ToString(), isFavorite, counts.CheckCount, counts.HintCount, playtime.TotalSeconds,
+            session.SourceUtcOffsetMinutes ?? 0, episodes));
     }
 
     /// <summary>Returns the complete ordered check history for a published session.</summary>

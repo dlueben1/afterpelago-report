@@ -2,6 +2,8 @@ import type { EChartsCoreOption } from "echarts/core";
 import type {
   CheckResponse,
   DailyCheckCountResponse,
+  EpisodeResponse,
+  SessionSlotResponse,
 } from "../api/generated/model";
 
 const DAY_MS = 86_400_000;
@@ -35,6 +37,49 @@ export function listSourceDays(
   ].sort();
 }
 
+/** Episodes worth listing: ones where at least one check was found. */
+export function listEpisodesWithChecks(
+  episodes: readonly EpisodeResponse[],
+): EpisodeResponse[] {
+  return episodes.filter((episode) => Number(episode.checkCount) > 0);
+}
+
+export interface AxisBreakRange {
+  start: number;
+  end: number;
+  gap: string;
+}
+
+/**
+ * Time spans where nobody was connected, for X-axis breaks. A gap that contains
+ * a check is left intact so no check is ever squeezed out of view.
+ */
+export function buildGapBreaks(
+  episodes: readonly EpisodeResponse[],
+  checks: readonly CheckResponse[],
+  window?: { start: number; end: number },
+): AxisBreakRange[] {
+  const ordered = episodes
+    .map((e) => ({ start: Date.parse(e.startUtc), end: Date.parse(e.endUtc) }))
+    .sort((a, b) => a.start - b.start);
+  const times = checks
+    .map((c) => Date.parse(c.timestampUtc))
+    .sort((a, b) => a - b);
+  const breaks: AxisBreakRange[] = [];
+  let cursor = 0;
+  for (let i = 1; i < ordered.length; i++) {
+    const gapStart = Math.max(ordered[i - 1].end, ordered[0].start);
+    const gapEnd = ordered[i].start;
+    if (gapEnd <= gapStart) continue;
+    while (cursor < times.length && times[cursor] < gapStart) cursor++;
+    if (cursor < times.length && times[cursor] <= gapEnd) continue;
+    const start = window ? Math.max(gapStart, window.start) : gapStart;
+    const end = window ? Math.min(gapEnd, window.end) : gapEnd;
+    if (end > start) breaks.push({ start, end, gap: "1.2%" });
+  }
+  return breaks;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
@@ -43,14 +88,23 @@ function escapeHtml(value: string): string {
     .replaceAll('"', "&quot;");
 }
 
-function formatCheckTooltip(params: unknown, checks: CheckResponse[]): string {
+function formatCheckTooltip(
+  params: unknown,
+  checks: CheckResponse[],
+  slotColors?: ReadonlyMap<number, string>,
+): string {
   const dataIndex = (params as { dataIndex?: number }).dataIndex;
   const check = dataIndex === undefined ? undefined : checks[dataIndex];
   if (!check) return "";
   const image = check.imageUrl
     ? `<img src="${escapeHtml(check.imageUrl)}" alt="" width="64" height="64" style="flex:none;width:64px;height:64px;object-fit:contain;image-rendering:pixelated" />`
     : "";
-  const summary = `<b>${escapeHtml(check.senderName)}</b> found <b>${escapeHtml(check.itemName)}</b> for <b>${escapeHtml(check.receiverName)}</b>`;
+  const playerName = (name: string, slotId: number | string) => {
+    const color = slotColors?.get(Number(slotId));
+    const style = color ? ` style="color:${escapeHtml(color)}"` : "";
+    return `<b${style}>${escapeHtml(name)}</b>`;
+  };
+  const summary = `${playerName(check.senderName, check.senderSlotId)} found <b>${escapeHtml(check.itemName)}</b> for ${playerName(check.receiverName, check.receiverSlotId)}`;
   const location = `(Found at ${escapeHtml(check.locationName)})`;
   const when = `${new Date(check.timestampUtc).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`;
   return `<div style="display:flex;align-items:flex-start;gap:12px;width:360px;max-width:calc(100vw - 96px);white-space:normal">${image}<div style="flex:1;min-width:0;overflow-wrap:anywhere"><div>${summary}</div><div style="margin-top:4px">${location}</div><div style="margin-top:4px">${when}</div></div></div>`;
@@ -63,7 +117,29 @@ function formatCheckTooltip(params: unknown, checks: CheckResponse[]): string {
 export function buildTimelineOption(
   checks: CheckResponse[],
   window?: { start: number; end: number },
+  slotColors?: ReadonlyMap<number, string>,
+  slots: readonly SessionSlotResponse[] = [],
+  breaks: readonly AxisBreakRange[] = [],
 ): EChartsCoreOption {
+  const goalMarkers = slots.flatMap((slot) => {
+    if (!slot.goalCompletedUtc) return [];
+    const color = slotColors?.get(Number(slot.id)) ?? "#facc15";
+    return [
+      {
+        xAxis: Date.parse(slot.goalCompletedUtc),
+        label: {
+          formatter: `${slot.playerName} Cleared!`,
+          color: "#10374a",
+          backgroundColor: "#ffffff",
+          borderColor: color,
+          borderWidth: 2,
+          padding: [2, 5],
+          position: "insideEndTop",
+        },
+        lineStyle: { color, width: 2, type: "solid" },
+      },
+    ];
+  });
   return {
     animation: false,
     grid: { left: 8, right: 24, top: 40, bottom: 8, containLabel: true },
@@ -74,11 +150,14 @@ export function buildTimelineOption(
       nameGap: 28,
       min: window?.start,
       max: window?.end,
+      breaks: breaks.length > 0 ? breaks : undefined,
+      breakArea: { expandOnClick: false },
     },
-    yAxis: { type: "value", min: 0, minInterval: 1 },
+    // scale + filtered zoom lets the Y range refit to the visible X window.
+    yAxis: { type: "value", scale: true, minInterval: 1 },
     toolbox: {
       feature: {
-        dataZoom: { yAxisIndex: "none", filterMode: "none" },
+        dataZoom: { yAxisIndex: "none", filterMode: "filter" },
         restore: {},
       },
     },
@@ -87,7 +166,7 @@ export function buildTimelineOption(
         id: "timeline-inside",
         type: "inside",
         xAxisIndex: 0,
-        filterMode: "none",
+        filterMode: "filter",
       },
     ],
     tooltip: {
@@ -97,7 +176,8 @@ export function buildTimelineOption(
       textStyle: { color: "#10374a" },
       trigger: "item",
       confine: true,
-      formatter: (params: unknown) => formatCheckTooltip(params, checks),
+      formatter: (params: unknown) =>
+        formatCheckTooltip(params, checks, slotColors),
     },
     series: [
       {
@@ -106,11 +186,34 @@ export function buildTimelineOption(
         data: checks.map((check, index) => ({
           value: [Date.parse(check.timestampUtc), index + 1],
           symbol: check.imageUrl ? `image://${check.imageUrl}` : "circle",
+          itemStyle: check.imageUrl
+            ? undefined
+            : { color: slotColors?.get(Number(check.senderSlotId)) },
         })),
         showSymbol: true,
         symbolSize: 22,
         symbolKeepAspect: true,
         lineStyle: { width: 2 },
+        // Single gradient-filled path; cheap compared to per-point rendering.
+        areaStyle: {
+          color: {
+            type: "linear",
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: "rgba(84, 112, 198, 0.35)" },
+              { offset: 1, color: "rgba(84, 112, 198, 0.02)" },
+            ],
+          },
+        },
+        markLine: {
+          symbol: "none",
+          silent: true,
+          animation: false,
+          data: goalMarkers,
+        },
         progressive: 1000,
         progressiveThreshold: 2000,
         emphasis: { scale: 1.5 },

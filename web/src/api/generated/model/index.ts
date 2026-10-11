@@ -12,6 +12,7 @@ export * from './counterResponse';
 export * from './customGameImageResponse';
 export * from './dailyCheckCountResponse';
 export * from './databaseInfoResponse';
+export * from './episodeResponse';
 export * from './gameCandidateResponse';
 export * from './gameItemResponse';
 export * from './gameMappingsResponse';
